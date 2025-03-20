@@ -11,6 +11,7 @@
 - [Description](#description)
 - [Liens utiles](#liens-utiles)
 - [Concept](#concept)
+- [Business Plan](#business-model)
 ### Configuration
 - [Installation et Configuration](#installation-et-configuration)
 ### Fonctionnalités
@@ -40,6 +41,17 @@ Le joueur incarne un responsable sécurité dans un environnement industriel où
 - Mode Blockchain: Vérification instantanée et traçabilité complète via technologie blockchain
 
 L'objectif est de sensibiliser aux avantages des systèmes de traçabilité avancés dans la prévention et la gestion des risques industriels.
+
+## Business Model
+
+L'application Proof of Game est conçue avec un modèle économique B2B orienté formation professionnelle :
+
+- **Licence Entreprise** : Formule d'abonnement pour les industries souhaitant former leurs employés
+- **Version Éducative** : Tarification spéciale pour les établissements d'enseignement et centres de formation
+- **Services Complémentaires** : Personnalisation des scénarios selon les besoins spécifiques du secteur client
+- **Analyse de Données** : Tableau de bord permettant aux formateurs d'analyser les performances des apprenants
+
+Le modèle vise à démontrer le retour sur investissement grâce à la réduction des incidents industriels et à l'amélioration de la conformité réglementaire dans les entreprises utilisatrices.
 
 ## Installation et Configuration
 
