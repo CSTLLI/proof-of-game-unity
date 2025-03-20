@@ -1,324 +1,122 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 using System.Collections.Generic;
-using System.Collections;
+using TMPro;
 
 public class TaskListUI : MonoBehaviour
 {
-    [SerializeField] private GameObject taskListPanel;
-    [SerializeField] private GameObject taskItemPrefab;
+    [Header("UI References")]
     [SerializeField] private Transform taskContainer;
-    [SerializeField] private float panelWidth = 300f;
-    [SerializeField] private float taskItemHeight = 40f;
-    [SerializeField] private Color completedTaskColor = new Color(0.2f, 0.8f, 0.2f);
-    [SerializeField] private Color pendingTaskColor = Color.white;
+    [SerializeField] private GameObject taskPrefab;
+    [SerializeField] private TextMeshProUGUI scenarioTitleText;
+    [SerializeField] private TextMeshProUGUI riskLevelText;
     
-    private Dictionary<string, GameObject> taskItems = new Dictionary<string, GameObject>();
-    private bool isPanelVisible = true;
+    [Header("Style")]
+    [SerializeField] private Color completedTaskColor = new Color(0.2f, 0.8f, 0.2f);
+    [SerializeField] private Color pendingTaskColor = new Color(0.8f, 0.8f, 0.8f);
+    [SerializeField] private Color blockchainTaskColor = new Color(0.2f, 0.6f, 1f);
+    
+    // Référence au ScenarioManager
     private ScenarioManager scenarioManager;
+    
+    // Dictionnaire pour stocker les références aux éléments UI des tâches
+    private Dictionary<string, GameObject> taskUIElements = new Dictionary<string, GameObject>();
     
     void Start()
     {
         // Trouver le ScenarioManager
         scenarioManager = FindObjectOfType<ScenarioManager>();
-        if (scenarioManager == null)
-        {
-            Debug.LogError("ScenarioManager introuvable!");
-            return;
-        }
         
-        // Créer les éléments UI si nécessaire
-        if (taskListPanel == null)
+        // Si le scénario n'est pas déjà initialisé, on l'initialise via le ScenarioManager
+        if (scenarioManager != null && scenarioTitleText != null)
         {
-            CreateTaskListPanel();
+            scenarioTitleText.text = scenarioManager.name;
         }
-        
-        // Attendre que les tâches soient initialisées dans le ScenarioManager
-        StartCoroutine(WaitForTasksAndInitialize());
     }
     
-    private IEnumerator WaitForTasksAndInitialize()
+    void Update()
     {
-        // Attendre que le ScenarioManager ait fini de configurer les tâches
-        yield return new WaitForSeconds(0.5f);
-        
-        // Récupérer et afficher les tâches
-        var tasks = scenarioManager.GetTasks();
-        if (tasks != null && tasks.Count > 0)
+        // Mise à jour du niveau de risque si disponible
+        if (scenarioManager != null && riskLevelText != null)
         {
-            Initialize(tasks);
-        }
-        else
-        {
-            Debug.LogWarning("Aucune tâche n'a été trouvée dans le ScenarioManager!");
+            riskLevelText.text = $"Niveau de risque: {scenarioManager.GetRiskLevel():0}%";
+            
+            // Changer la couleur en fonction du niveau de risque
+            float risk = scenarioManager.GetRiskLevel();
+            if (risk < 30f)
+                riskLevelText.color = Color.green;
+            else if (risk < 60f)
+                riskLevelText.color = Color.yellow;
+            else
+                riskLevelText.color = Color.red;
         }
     }
     
     public void Initialize(List<Task> tasks)
     {
-        // Créer le panel si nécessaire
-        if (taskListPanel == null)
-        {
-            CreateTaskListPanel();
-        }
-        
-        // Effacer les tâches existantes
-        ClearTaskItems();
-        
-        // Créer une entrée pour chaque tâche
-        foreach (Task task in tasks)
-        {
-            AddTaskItem(task);
-        }
-    }
-    
-    private void CreateTaskListPanel()
-    {
-        // Créer un panel pour la liste des tâches
-        taskListPanel = new GameObject("TaskListPanel");
-        taskListPanel.transform.SetParent(transform, false);
-        
-        RectTransform panelRect = taskListPanel.AddComponent<RectTransform>();
-        panelRect.anchorMin = new Vector2(0, 0.5f);
-        panelRect.anchorMax = new Vector2(0, 0.5f);
-        panelRect.pivot = new Vector2(0, 0.5f);
-        panelRect.anchoredPosition = new Vector2(20, 0);
-        panelRect.sizeDelta = new Vector2(panelWidth, 400);
-        
-        Image panelImage = taskListPanel.AddComponent<Image>();
-        panelImage.color = new Color(0.1f, 0.1f, 0.1f, 0.8f);
-        
-        // Titre du panel
-        GameObject titleObj = new GameObject("Title");
-        titleObj.transform.SetParent(taskListPanel.transform, false);
-        
-        RectTransform titleRect = titleObj.AddComponent<RectTransform>();
-        titleRect.anchorMin = new Vector2(0, 1);
-        titleRect.anchorMax = new Vector2(1, 1);
-        titleRect.pivot = new Vector2(0.5f, 1);
-        titleRect.anchoredPosition = Vector2.zero;
-        titleRect.sizeDelta = new Vector2(0, 50);
-        
-        TextMeshProUGUI titleText = titleObj.AddComponent<TextMeshProUGUI>();
-        titleText.text = "TÂCHES À ACCOMPLIR";
-        titleText.alignment = TextAlignmentOptions.Center;
-        titleText.fontSize = 18;
-        titleText.color = Color.white;
-        
-        // Conteneur pour les tâches
-        GameObject containerObj = new GameObject("TaskContainer");
-        containerObj.transform.SetParent(taskListPanel.transform, false);
-        
-        taskContainer = containerObj.transform;
-        
-        RectTransform containerRect = containerObj.AddComponent<RectTransform>();
-        containerRect.anchorMin = new Vector2(0, 0);
-        containerRect.anchorMax = new Vector2(1, 1);
-        containerRect.pivot = new Vector2(0.5f, 0.5f);
-        containerRect.anchoredPosition = Vector2.zero;
-        containerRect.offsetMin = new Vector2(10, 10);
-        containerRect.offsetMax = new Vector2(-10, -60);
-        
-        // Créer un layout group pour organiser les tâches
-        VerticalLayoutGroup layoutGroup = containerObj.AddComponent<VerticalLayoutGroup>();
-        layoutGroup.spacing = 5;
-        layoutGroup.childAlignment = TextAnchor.UpperLeft;
-        layoutGroup.childControlHeight = false;
-        layoutGroup.childControlWidth = true;
-        layoutGroup.childForceExpandHeight = false;
-        layoutGroup.childForceExpandWidth = true;
-        
-        // Ajouter un content size fitter
-        ContentSizeFitter sizeFitter = containerObj.AddComponent<ContentSizeFitter>();
-        sizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-        
-        // Boutond de réduction/expansion
-        GameObject toggleButton = new GameObject("ToggleButton");
-        toggleButton.transform.SetParent(taskListPanel.transform, false);
-        
-        RectTransform toggleRect = toggleButton.AddComponent<RectTransform>();
-        toggleRect.anchorMin = new Vector2(1, 1);
-        toggleRect.anchorMax = new Vector2(1, 1);
-        toggleRect.pivot = new Vector2(1, 1);
-        toggleRect.anchoredPosition = new Vector2(-10, -10);
-        toggleRect.sizeDelta = new Vector2(30, 30);
-        
-        Image toggleImage = toggleButton.AddComponent<Image>();
-        toggleImage.color = new Color(0.3f, 0.3f, 0.3f);
-        
-        Button toggleBtn = toggleButton.AddComponent<Button>();
-        toggleBtn.onClick.AddListener(TogglePanel);
-        
-        // Texte du bouton
-        GameObject toggleTextObj = new GameObject("Text");
-        toggleTextObj.transform.SetParent(toggleButton.transform, false);
-        
-        RectTransform toggleTextRect = toggleTextObj.AddComponent<RectTransform>();
-        toggleTextRect.anchorMin = Vector2.zero;
-        toggleTextRect.anchorMax = Vector2.one;
-        toggleTextRect.offsetMin = Vector2.zero;
-        toggleTextRect.offsetMax = Vector2.zero;
-        
-        TextMeshProUGUI toggleText = toggleTextObj.AddComponent<TextMeshProUGUI>();
-        toggleText.text = "-";
-        toggleText.alignment = TextAlignmentOptions.Center;
-        toggleText.fontSize = 16;
-        toggleText.color = Color.white;
-    }
-    
-    private void TogglePanel()
-    {
-        isPanelVisible = !isPanelVisible;
-        
-        // Mettre à jour l'affichage des tâches
-        foreach (Transform child in taskContainer)
-        {
-            child.gameObject.SetActive(isPanelVisible);
-        }
-        
-        // Mettre à jour le texte du bouton
-        TextMeshProUGUI toggleText = taskListPanel.transform.Find("ToggleButton/Text").GetComponent<TextMeshProUGUI>();
-        toggleText.text = isPanelVisible ? "-" : "+";
-        
-        // Ajuster la taille du panel
-        RectTransform panelRect = taskListPanel.GetComponent<RectTransform>();
-        if (isPanelVisible)
-        {
-            panelRect.sizeDelta = new Vector2(panelWidth, 400);
-        }
-        else
-        {
-            panelRect.sizeDelta = new Vector2(panelWidth, 50);
-        }
-    }
-    
-    private void ClearTaskItems()
-    {
+        // Nettoyer le conteneur de tâches
         foreach (Transform child in taskContainer)
         {
             Destroy(child.gameObject);
         }
-        taskItems.Clear();
-    }
-    
-    private void AddTaskItem(Task task)
-    {
-        // Créer le prefab de l'item si nécessaire
-        if (taskItemPrefab == null)
+        taskUIElements.Clear();
+        
+        // Créer les éléments UI pour chaque tâche
+        foreach (Task task in tasks)
         {
-            CreateTaskItemPrefab();
-        }
-        
-        // Instancier l'item pour cette tâche
-        GameObject taskItem = Instantiate(taskItemPrefab, taskContainer);
-        
-        // Configurer l'apparence de l'item
-        RectTransform itemRect = taskItem.GetComponent<RectTransform>();
-        itemRect.sizeDelta = new Vector2(0, taskItemHeight);
-        
-        // Configurer le texte de la tâche
-        TextMeshProUGUI taskText = taskItem.GetComponentInChildren<TextMeshProUGUI>();
-        if (taskText != null)
-        {
-            taskText.text = task.description;
-            taskText.color = task.isCompleted ? completedTaskColor : pendingTaskColor;
-        }
-        
-        // Configurer l'état de complétion
-        Toggle toggleComplete = taskItem.GetComponentInChildren<Toggle>();
-        if (toggleComplete != null)
-        {
-            toggleComplete.isOn = task.isCompleted;
-            toggleComplete.interactable = false; // Le joueur ne peut pas cocher manuellement
-        }
-        
-        // Stocker pour référence
-        taskItems[task.taskName] = taskItem;
-    }
-    
-    private void CreateTaskItemPrefab()
-    {
-        // Créer le prefab pour les items de tâche
-        taskItemPrefab = new GameObject("TaskItemPrefab");
-        
-        RectTransform itemRect = taskItemPrefab.AddComponent<RectTransform>();
-        itemRect.sizeDelta = new Vector2(0, taskItemHeight);
-        
-        // Background
-        Image bgImage = taskItemPrefab.AddComponent<Image>();
-        bgImage.color = new Color(0.2f, 0.2f, 0.2f, 0.5f);
-        
-        // Checkbox
-        GameObject checkboxObj = new GameObject("Checkbox");
-        checkboxObj.transform.SetParent(taskItemPrefab.transform, false);
-        
-        RectTransform checkboxRect = checkboxObj.AddComponent<RectTransform>();
-        checkboxRect.anchorMin = new Vector2(0, 0.5f);
-        checkboxRect.anchorMax = new Vector2(0, 0.5f);
-        checkboxRect.pivot = new Vector2(0, 0.5f);
-        checkboxRect.anchoredPosition = new Vector2(10, 0);
-        checkboxRect.sizeDelta = new Vector2(20, 20);
-        
-        Image checkboxImage = checkboxObj.AddComponent<Image>();
-        checkboxImage.color = new Color(0.3f, 0.3f, 0.3f);
-        
-        Toggle checkbox = checkboxObj.AddComponent<Toggle>();
-        checkbox.isOn = false;
-        checkbox.interactable = false;
-        
-        // Checkmark
-        GameObject checkmarkObj = new GameObject("Checkmark");
-        checkmarkObj.transform.SetParent(checkboxObj.transform, false);
-        
-        RectTransform checkmarkRect = checkmarkObj.AddComponent<RectTransform>();
-        checkmarkRect.anchorMin = Vector2.zero;
-        checkmarkRect.anchorMax = Vector2.one;
-        checkmarkRect.offsetMin = new Vector2(4, 4);
-        checkmarkRect.offsetMax = new Vector2(-4, -4);
-        
-        Image checkmarkImage = checkmarkObj.AddComponent<Image>();
-        checkmarkImage.color = new Color(0.2f, 0.8f, 0.2f);
-        
-        checkbox.graphic = checkmarkImage;
-        
-        // Task Text
-        GameObject textObj = new GameObject("Text");
-        textObj.transform.SetParent(taskItemPrefab.transform, false);
-        
-        RectTransform textRect = textObj.AddComponent<RectTransform>();
-        textRect.anchorMin = new Vector2(0, 0);
-        textRect.anchorMax = new Vector2(1, 1);
-        textRect.offsetMin = new Vector2(40, 5);
-        textRect.offsetMax = new Vector2(-5, -5);
-        
-        TextMeshProUGUI text = textObj.AddComponent<TextMeshProUGUI>();
-        text.fontSize = 14;
-        text.alignment = TextAlignmentOptions.Left;
-        text.color = Color.white;
-        
-        // Ne pas détruire lors de l'instanciation
-        DontDestroyOnLoad(taskItemPrefab);
-        taskItemPrefab.SetActive(false);
-    }
-    
-    // Mettre à jour l'UI quand une tâche est complétée
-    public void UpdateTaskStatus(string taskName, bool completed)
-    {
-        if (taskItems.TryGetValue(taskName, out GameObject taskItem))
-        {
-            Toggle toggleComplete = taskItem.GetComponentInChildren<Toggle>();
-            if (toggleComplete != null)
-            {
-                toggleComplete.isOn = completed;
-            }
+            GameObject taskElement = Instantiate(taskPrefab, taskContainer);
             
-            // Changer la couleur du texte
-            TextMeshProUGUI taskText = taskItem.GetComponentInChildren<TextMeshProUGUI>();
+            // Configurer l'élément UI
+            TextMeshProUGUI taskText = taskElement.GetComponentInChildren<TextMeshProUGUI>();
+            Toggle taskToggle = taskElement.GetComponentInChildren<Toggle>();
+            Image taskImage = taskElement.GetComponent<Image>();
+            
             if (taskText != null)
             {
-                taskText.color = completed ? completedTaskColor : pendingTaskColor;
+                taskText.text = task.description;
+                
+                // Marquer les tâches qui nécessitent la blockchain
+                if (task.requiresBlockchain)
+                {
+                    taskText.color = blockchainTaskColor;
+                    taskText.text = task.description + " (Blockchain)";
+                }
+            }
+            
+            if (taskToggle != null)
+            {
+                taskToggle.isOn = task.isCompleted;
+                taskToggle.interactable = false; // L'utilisateur ne peut pas directement cocher/décocher
+            }
+            
+            // Stocker une référence à l'élément UI
+            taskUIElements[task.taskName] = taskElement;
+        }
+    }
+    
+    public void UpdateTaskStatus(string taskName, bool isCompleted)
+    {
+        // Mettre à jour l'état visuel d'une tâche
+        if (taskUIElements.TryGetValue(taskName, out GameObject taskElement))
+        {
+            Toggle taskToggle = taskElement.GetComponentInChildren<Toggle>();
+            Image taskBackground = taskElement.GetComponent<Image>();
+            
+            if (taskToggle != null)
+            {
+                taskToggle.isOn = isCompleted;
+            }
+            
+            if (taskBackground != null)
+            {
+                taskBackground.color = isCompleted ? completedTaskColor : pendingTaskColor;
             }
         }
+    }
+    
+    // Méthode pour afficher/masquer la liste des tâches
+    public void ToggleTaskList()
+    {
+        gameObject.SetActive(!gameObject.activeSelf);
     }
 }

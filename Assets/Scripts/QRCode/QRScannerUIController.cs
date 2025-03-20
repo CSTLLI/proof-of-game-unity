@@ -24,11 +24,15 @@ public class QRScannerUIController : MonoBehaviour
 
     // Référence au scanner station pour connaître le mode
     private QRScannerStation currentScanner;
+    private string currentTaskName = "";
     private Coroutine scanCoroutine;
     private bool isScanning = false;
     private bool isInitialized = false;
     private bool wasMouseLocked = false;
     private bool wasCursorVisible = false;
+
+    private bool isTabletMode = false;
+    [SerializeField] private Vector2 tabletPanelSize = new Vector2(450, 350);
 
     // Méthode pour initialiser les références (appelée par le générateur)
     public void SetupReferences(
@@ -61,6 +65,14 @@ public class QRScannerUIController : MonoBehaviour
         if (blockchainToggle != null)
             blockchainToggle.onValueChanged.AddListener(OnBlockchainToggleChanged);
 
+        float aspectRatio = (float)Screen.width / Screen.height;
+        isTabletMode = aspectRatio < 1.5f;
+
+        if (isTabletMode && scannerPanel != null)
+        {
+            AdjustForTabletMode();
+        }
+
         isInitialized = true;
         Debug.Log("QRScannerUIController initialisé avec succès.");
     }
@@ -81,7 +93,7 @@ public class QRScannerUIController : MonoBehaviour
         }
     }
 
-    public void StartScan(QRScannerStation scanner)
+    public void StartScan(QRScannerStation scanner, string taskName = "")
     {
         if (!isInitialized)
         {
@@ -93,6 +105,7 @@ public class QRScannerUIController : MonoBehaviour
         // Sauvegarder l'état actuel du curseur
         wasMouseLocked = Cursor.lockState == CursorLockMode.Locked;
         wasCursorVisible = Cursor.visible;
+        currentTaskName = taskName;
 
         // Activer et montrer le curseur
         Cursor.lockState = CursorLockMode.None;
@@ -124,7 +137,7 @@ public class QRScannerUIController : MonoBehaviour
 
         // Réactiver le contrôle de la caméra
         DisableCameraControl(false);
-        
+
         if (currentScanner != null)
         {
             currentScanner.interactionText = currentScanner.savedInteractionText;
@@ -221,21 +234,21 @@ public class QRScannerUIController : MonoBehaviour
         statusText.color = blockchainModeColor;
 
         // Afficher les infos produit
-        productInfoText.text = 
+        productInfoText.text =
             "Aileron F1 Ferrari - Maranello Edition\n\nAileron en fibre de carbone de grade aérospatial, conçu dans les ateliers d'excellence de la Scuderia Ferrari. Performance aérodynamique optimale.";
 
         // Activer le panneau blockchain
         blockchainPanel.SetActive(true);
 
         // Afficher les détails blockchain
-        blockchainInfoText.text = 
+        blockchainInfoText.text =
             "Certification Ferrari: " + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") +
             "\nOrigine: Usine Maranello, Italie" +
             "\nHash de certification: 0xF3RR4R1m4r4n3ll02024c8d73bf6721c87a..." +
-            "\nDate de fabrication: 2025-02-19" + 
+            "\nDate de fabrication: 2025-02-19" +
             "\nNuméro de série: SF23-AER-058" +
             "\nValidation: Département Aérodynamique Scuderia Ferrari";
-        NotifyTaskCompletion("scanner_piece_aileron");
+        NotifyTaskCompletion(currentTaskName);
     }
 
     private void DisplayStandardResults()
@@ -259,21 +272,86 @@ public class QRScannerUIController : MonoBehaviour
             // Afficher les infos limitées
             statusText.text = "Scan Terminé - Informations Limitées";
             statusText.color = standardModeColor;
-            productInfoText.text = 
+            productInfoText.text =
                 "Aileron F1 Ferrari - Maranello Edition\n\nAileron en fibre de carbone de grade aérospatial, conçu dans les ateliers d'excellence de la Scuderia Ferrari. Performance aérodynamique optimale.\nUtilisez le mode blockchain pour accéder à l'historique complet.";
 
             // Jouer le son de succès
             currentScanner.PlaySuccessSound();
-            NotifyTaskCompletion("scanner_piece_aileron");
+            NotifyTaskCompletion(currentTaskName);
         }
     }
-    
+
     public void NotifyTaskCompletion(string taskName)
     {
         ScenarioManager scenarioManager = FindObjectOfType<ScenarioManager>();
         if (scenarioManager != null)
         {
             scenarioManager.CompleteTask(taskName);
+        }
+    }
+
+// Ajouter cette méthode pour l'ajustement sur tablette
+    private void AdjustForTabletMode()
+    {
+        // Redimensionner le panneau principal
+        RectTransform panelRect = scannerPanel.GetComponent<RectTransform>();
+        if (panelRect != null)
+        {
+            panelRect.sizeDelta = tabletPanelSize;
+        }
+
+        // Ajuster les tailles de texte
+        if (statusText != null)
+        {
+            statusText.fontSize -= 2;
+        }
+
+        if (productInfoText != null)
+        {
+            productInfoText.fontSize -= 1;
+
+            // Ajuster la zone de texte
+            RectTransform textRect = productInfoText.GetComponent<RectTransform>();
+            if (textRect != null)
+            {
+                textRect.sizeDelta = new Vector2(textRect.sizeDelta.x * 0.9f, textRect.sizeDelta.y);
+            }
+        }
+
+        if (blockchainInfoText != null)
+        {
+            blockchainInfoText.fontSize -= 1;
+        }
+
+        // Redimensionner le panneau blockchain
+        if (blockchainPanel != null)
+        {
+            RectTransform blockchainRect = blockchainPanel.GetComponent<RectTransform>();
+            if (blockchainRect != null)
+            {
+                blockchainRect.sizeDelta = new Vector2(blockchainRect.sizeDelta.x * 0.9f, blockchainRect.sizeDelta.y);
+            }
+        }
+
+        // Ajuster la position des boutons
+        if (closeButton != null)
+        {
+            RectTransform buttonRect = closeButton.GetComponent<RectTransform>();
+            if (buttonRect != null)
+            {
+                buttonRect.anchoredPosition =
+                    new Vector2(buttonRect.anchoredPosition.x, buttonRect.anchoredPosition.y + 5);
+            }
+        }
+
+        if (blockchainToggle != null)
+        {
+            RectTransform toggleRect = blockchainToggle.GetComponent<RectTransform>();
+            if (toggleRect != null)
+            {
+                toggleRect.anchoredPosition =
+                    new Vector2(toggleRect.anchoredPosition.x - 20, toggleRect.anchoredPosition.y);
+            }
         }
     }
 }

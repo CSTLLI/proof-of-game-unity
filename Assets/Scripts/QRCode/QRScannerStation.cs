@@ -13,6 +13,7 @@ public class QRScannerStation : Interactable
     
     // Référence au contrôleur UI
     [SerializeField] private QRScannerUIController uiController;
+    [SerializeField] private string associatedTaskName = "scanner_admission";
     
     // Composant AudioSource
     private AudioSource audioSource;
@@ -78,39 +79,40 @@ public class QRScannerStation : Interactable
     public override void Interact()
     {
         Debug.Log("Interaction avec la station scanner QR");
-    
+
         // Sauvegarder et masquer le texte d'interaction
         savedInteractionText = interactionText;
         interactionText = "";
-        
+    
         // Jouer le son de début de scan
         if (scanStartSound != null)
         {
             audioSource.PlayOneShot(scanStartSound);
         }
-        
+    
         // Si le contrôleur n'est toujours pas disponible, réessayer l'initialisation
         if (uiController == null)
         {
             uiController = FindObjectOfType<QRScannerUIController>();
-            
+        
             if (uiController == null)
             {
                 Debug.LogWarning("QRScannerUIController introuvable. Tentative de réinitialisation...");
-                InitializeUI();
+                // InitializeUI();
             }
         }
-    
+
         // Démarrer le scan avec l'UI si disponible
         if (uiController != null)
         {
-            uiController.StartScan(this);
+            // Passer le nom de la tâche associée à cette station
+            uiController.StartScan(this, associatedTaskName);
         }
         else
         {
             Debug.LogError("Impossible de trouver ou créer QRScannerUIController. Utilisation du processus de scan de secours.");
             StartCoroutine(ScanProcess());
-            
+        
             // Restaurer le texte d'interaction puisque l'UI n'est pas disponible
             interactionText = savedInteractionText;
         }
