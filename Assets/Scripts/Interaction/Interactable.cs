@@ -1,26 +1,26 @@
 using UnityEngine;
 
-public abstract class Interactable : MonoBehaviour
+namespace Interaction
 {
-    public string interactionText = "interagir";
-    public KeyCode interactionKey = KeyCode.E;
-    
-    public abstract void Interact();
-    
-    public virtual void OnFocus()
+    public abstract class Interactable : MonoBehaviour
     {
-        if (TryGetComponent<Renderer>(out var renderer))
+        public string interactionText = "interagir";
+        public KeyCode interactionKey = KeyCode.E;
+        
+        public abstract void Interact();
+        
+        public virtual void OnFocus()
         {
-            renderer.material.color = Color.yellow;
+            if (TryGetComponent<Renderer>(out var renderer))
+                renderer.material.color = Color.yellow;
+                
+            Debug.Log($"Regardant: {gameObject.name}");
         }
-        Debug.Log($"Regardant: {gameObject.name}");
-    }
-    
-    public virtual void OnLoseFocus()
-    {
-        if (TryGetComponent<Renderer>(out var renderer))
+        
+        public virtual void OnLoseFocus()
         {
-            renderer.material.color = Color.white;
+            if (TryGetComponent<Renderer>(out var renderer))
+                renderer.material.color = Color.white;
         }
     }
 }

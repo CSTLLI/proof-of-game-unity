@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using Core;
 using TMPro;
 
 public class TaskListUI : MonoBehaviour
@@ -118,5 +119,13 @@ public class TaskListUI : MonoBehaviour
     public void ToggleTaskList()
     {
         gameObject.SetActive(!gameObject.activeSelf);
+    }
+
+    public class Task
+    {
+        public string taskName;
+        public bool isCompleted;
+        public string description;
+        public bool requiresBlockchain;
     }
 }
