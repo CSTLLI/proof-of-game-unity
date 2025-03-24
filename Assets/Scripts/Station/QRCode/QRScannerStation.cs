@@ -27,7 +27,7 @@ namespace Station.QRCode
         {
             if (uiController == null)
             {
-                uiController = FindObjectOfType<QRScannerUIController>();
+                uiController = FindFirstObjectByType<QRScannerUIController>();
 
                 if (uiController == null)
                 {
@@ -42,21 +42,19 @@ namespace Station.QRCode
 
         private void InitializeUI()
         {
-            QRScannerUIGenerator generator = FindObjectOfType<QRScannerUIGenerator>();
+            QRScannerUIGenerator generator = FindFirstObjectByType<QRScannerUIGenerator>();
 
             if (generator == null)
             {
-                // Créer un objet qui contiendra le générateur d'UI
                 GameObject uiManagerObj = new GameObject("QRScannerManager");
                 generator = uiManagerObj.AddComponent<QRScannerUIGenerator>();
                 Debug.Log("Création d'un nouveau QRScannerUIGenerator");
             }
-
-            // Générer l'interface UI
+            
             generator.GenerateUI();
 
             // Trouver le controller qui a été créé
-            uiController = FindObjectOfType<QRScannerUIController>();
+            uiController = FindFirstObjectByType<QRScannerUIController>();
 
             if (uiController == null)
                 Debug.LogError("Échec de création du QRScannerUIController");
@@ -79,12 +77,12 @@ namespace Station.QRCode
 
             // Chercher l'UIController si on ne l'a pas déjà
             if (uiController == null)
-                uiController = FindObjectOfType<QRScannerUIController>();
+                uiController = FindFirstObjectByType<QRScannerUIController>();
 
             if (uiController != null)
             {
                 // IMPORTANT: Utiliser le PlayerInteractionController pour obtenir l'aileron actuellement ciblé
-                PlayerInteractionController playerController = FindObjectOfType<PlayerInteractionController>();
+                PlayerInteractionController playerController = FindFirstObjectByType<PlayerInteractionController>();
                 if (playerController != null && playerController.currentInteractable != null)
                 {
                     // Trouver le WingIdentifier attaché à cet interactable ou à son parent

@@ -62,7 +62,7 @@ namespace UI.Modal
                     riskText.color = Color.red;
             }
             
-            ScenarioManager scenarioManager = FindObjectOfType<ScenarioManager>();
+            ScenarioManager scenarioManager = FindFirstObjectByType<ScenarioManager>();
             if (scenarioManager != null)
             {
                 scenarioManager.DisablePlayerControls(true);

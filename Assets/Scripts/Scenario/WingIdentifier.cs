@@ -29,7 +29,7 @@ public class WingIdentifier : MonoBehaviour
     
         Debug.Log($"InitializeAfterDelay pour {gameObject.name} - ID initial: {aileronId}");
     
-        scenarioManager = FindObjectOfType<ScenarioManager>();
+        scenarioManager = FindFirstObjectByType<ScenarioManager>();
     
         if (scenarioManager != null && !string.IsNullOrEmpty(aileronId))
         {

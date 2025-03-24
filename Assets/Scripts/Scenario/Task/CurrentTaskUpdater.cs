@@ -33,7 +33,7 @@ namespace Scenario.Task
                 descriptionText = transform.Find("DescriptionText")?.GetComponent<TextMeshProUGUI>();
                 
             if (scenarioManager == null)
-                scenarioManager = FindObjectOfType<ScenarioManager>();
+                scenarioManager = FindFirstObjectByType<ScenarioManager>();
                 
             if (titleText != null && descriptionText != null)
                 UpdateTaskText("Trouvez et validez les 2 ailerons pour Monaco", false);

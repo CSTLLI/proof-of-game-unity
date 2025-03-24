@@ -6,7 +6,7 @@ public class DocumentationUIGenerator : MonoBehaviour
 {
     [Header("Configuration")] 
     [SerializeField] private string canvasName = "DocumentationCanvas";
-    [SerializeField] private Vector2 panelSize = new Vector2(700, 500);
+    [SerializeField] private Vector2 panelSize = new Vector2(800, 600);
     [SerializeField] private Color panelColor = new Color(0.1f, 0.1f, 0.1f, 0.9f);
     [SerializeField] private bool generateOnStart = false;
 
@@ -39,16 +39,15 @@ public class DocumentationUIGenerator : MonoBehaviour
         canvasObject = new GameObject(canvasName);
         Canvas canvas = canvasObject.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = 100; // S'assurer qu'il est au-dessus des autres UI
-
-        // Ajouter les composants nécessaires au Canvas
+        canvas.sortingOrder = 100;
+        
         canvasObject.AddComponent<CanvasScaler>().uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         canvasObject.AddComponent<GraphicRaycaster>();
 
         // Créer le panel principal
         panelObject = CreatePanel("DocumentationPanel", canvasObject.transform, panelSize, panelColor);
         RectTransform panelRect = panelObject.GetComponent<RectTransform>();
-        panelRect.anchoredPosition = Vector2.zero; // Centre de l'écran
+        panelRect.anchoredPosition = Vector2.zero;
 
         // Créer l'UI Controller et l'attacher au GameObject actuel
         uiController = gameObject.AddComponent<DocumentationUIController>();

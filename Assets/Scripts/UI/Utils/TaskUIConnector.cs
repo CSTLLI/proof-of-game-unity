@@ -15,7 +15,7 @@ public class TaskUIConnector : MonoBehaviour
     
     void Start()
     {
-        if (FindObjectOfType<GameUIManager>() == null)
+        if (FindFirstObjectByType<GameUIManager>() == null)
         {
             GameObject uiCreator = new GameObject("UI_Creator");
             GameUICreator creator = uiCreator.AddComponent<GameUICreator>();
@@ -29,7 +29,7 @@ public class TaskUIConnector : MonoBehaviour
         // Attendre un frame pour s'assurer que l'UI a été créée
         yield return null;
         
-        uiManager = FindObjectOfType<GameUIManager>();
+        uiManager = FindFirstObjectByType<GameUIManager>();
         
         if (uiManager != null)
         {

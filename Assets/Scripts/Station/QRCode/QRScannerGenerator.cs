@@ -4,15 +4,11 @@ using TMPro;
 
 public class QRScannerUIGenerator : MonoBehaviour
 {
-    [Header("Configuration")] [SerializeField]
-    private string canvasName = "QRScannerCanvas";
-
-    [SerializeField] private Vector2 panelSize = new Vector2(600, 400);
-    [SerializeField] private Color panelColor = new Color(0.1f, 0.1f, 0.1f, 0.9f);
+    [Header("Configuration")]
+    [SerializeField] private string canvasName = "QRScannerCanvas";
+    [SerializeField] private Vector2 panelSize = new Vector2(600, 450);
+    [SerializeField] private Color panelColor = new Color(0.1f, 0.1f, 0.1f, 1f); // Opacité à 100%
     [SerializeField] private bool generateOnStart = false;
-
-    [Header("Textures")] [SerializeField] private Sprite scanFrameSprite;
-    [SerializeField] private Sprite productIconPlaceholder;
 
     private GameObject canvasObject;
     private GameObject panelObject;
@@ -39,7 +35,7 @@ public class QRScannerUIGenerator : MonoBehaviour
         canvasObject = new GameObject(canvasName);
         Canvas canvas = canvasObject.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = 100; // S'assurer qu'il est au-dessus des autres UI
+        canvas.sortingOrder = 100;
 
         // Ajouter les composants nécessaires au Canvas
         canvasObject.AddComponent<CanvasScaler>().uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -48,26 +44,74 @@ public class QRScannerUIGenerator : MonoBehaviour
         // Créer le panel principal
         panelObject = CreatePanel("ScannerPanel", canvasObject.transform, panelSize, panelColor);
         RectTransform panelRect = panelObject.GetComponent<RectTransform>();
-        panelRect.anchoredPosition = Vector2.zero; // Centre de l'écran
+        panelRect.anchoredPosition = Vector2.zero;
 
         // Créer l'UI Controller et l'attacher au GameObject actuel
         uiController = gameObject.AddComponent<QRScannerUIController>();
 
         // Créer les éléments UI
-        GameObject titleObj = CreateTextMeshPro("TitleText", panelRect, new Vector2(0, panelSize.y / 2 - 30),
-            new Vector2(panelSize.x, 50), "Scanner QR Code", 24, TextAlignmentOptions.Center);
+        // --- En-tête avec titre et toggle ---
+        GameObject headerPanel = CreatePanel("HeaderPanel", panelRect, 
+            new Vector2(panelSize.x, 50), 
+            new Color(0.05f, 0.05f, 0.05f, 1f));
+        headerPanel.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, panelSize.y/2 - 25);
 
-        // Créer le cadre de scan
-        // GameObject frameObj = CreateImage("ScannerFrame", panelRect, Vector2.zero, 
-        //     new Vector2(200, 200), scanFrameSprite ? scanFrameSprite : CreateDefaultSprite(Color.white, true));
+        GameObject titleObj = CreateTextMeshPro("TitleText", headerPanel.transform, 
+            new Vector2(0, 0),
+            new Vector2(200, 40), "Scanner QR Code", 22, TextAlignmentOptions.Center);
+        titleObj.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, 0);
 
-        // Créer la barre de progression
-        GameObject progressBarBg = CreateImage("ProgressBarBackground", panelRect,
-            new Vector2(0, -panelSize.y / 2 + 70),
-            new Vector2(panelSize.x - 60, 20), CreateDefaultSprite(new Color(0.2f, 0.2f, 0.2f)));
+        // Toggle blockchain dans l'en-tête à droite
+        GameObject toggleObj = CreateToggle("BlockchainToggle", headerPanel.transform,
+            new Vector2(panelSize.x/2 - 100, 0),
+            "Mode Blockchain");
 
-        GameObject progressBarFill = CreateImage("ScanProgressBar", progressBarBg.transform, Vector2.zero,
-            new Vector2(progressBarBg.GetComponent<RectTransform>().sizeDelta.x, 20), CreateDefaultSprite(Color.blue));
+        // --- Zone principale d'information ---
+        GameObject infoPanel = CreatePanel("InfoPanel", panelRect, 
+            new Vector2(panelSize.x - 40, 240), 
+            new Color(0.15f, 0.15f, 0.15f, 1f));
+        infoPanel.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, 40);
+
+        // Informations d'aileron
+        GameObject productInfoObj = CreateTextMeshPro("ProductInfoText", infoPanel.transform, 
+            new Vector2(0, 0),
+            new Vector2(panelSize.x - 60, 240), "", 16, TextAlignmentOptions.Left);
+        
+        // --- Zone pour les détails blockchain ---
+        GameObject blockchainPanel = CreatePanel("BlockchainPanel", panelRect,
+            new Vector2(panelSize.x - 40, 70), 
+            new Color(0.05f, 0.15f, 0.05f, 1f));
+        blockchainPanel.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, -70);
+
+        GameObject blockchainInfoObj = CreateTextMeshPro("BlockchainInfoText", blockchainPanel.transform, 
+            Vector2.zero,
+            new Vector2(panelSize.x - 60, 60), "", 14, TextAlignmentOptions.Left);
+
+        // --- Zone de statut et progression ---
+        GameObject statusPanel = CreatePanel("StatusPanel", panelRect, 
+            new Vector2(panelSize.x, 40), 
+            new Color(0.0f, 0.0f, 0.2f, 1f));
+        statusPanel.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, -130);
+
+        GameObject statusObj = CreateTextMeshPro("StatusText", statusPanel.transform, 
+            Vector2.zero,
+            new Vector2(panelSize.x - 40, 30), "Prêt à scanner...", 16, TextAlignmentOptions.Center);
+
+        // --- Zone de boutons ---
+        GameObject buttonPanel = CreatePanel("ButtonPanel", panelRect, 
+            new Vector2(panelSize.x, 60), 
+            new Color(0.1f, 0.1f, 0.1f, 1f));
+        buttonPanel.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, -panelSize.y/2 + 30);
+
+        // Barre de progression
+        GameObject progressBarBg = CreateImage("ProgressBarBackground", buttonPanel.transform,
+            new Vector2(0, 15),
+            new Vector2(panelSize.x - 60, 8), CreateDefaultSprite(new Color(0.2f, 0.2f, 0.2f)));
+
+        GameObject progressBarFill = CreateImage("ScanProgressBar", progressBarBg.transform, 
+            Vector2.zero,
+            new Vector2(progressBarBg.GetComponent<RectTransform>().sizeDelta.x, 8), 
+            CreateDefaultSprite(Color.green));
 
         // Configurer le remplissage de la barre de progression
         Image progressFillImage = progressBarFill.GetComponent<Image>();
@@ -76,61 +120,38 @@ public class QRScannerUIGenerator : MonoBehaviour
         progressFillImage.fillOrigin = 0;
         progressFillImage.fillAmount = 0;
 
-        // Créer le texte de statut
-        GameObject statusObj = CreateTextMeshPro("StatusText", panelRect, new Vector2(0, -panelSize.y / 2 + 100),
-            new Vector2(panelSize.x - 40, 30), "Prêt à scanner...", 16, TextAlignmentOptions.Center);
-
-        // Créer la zone d'information produit
-        GameObject productInfoObj = CreateTextMeshPro("ProductInfoText", panelRect, new Vector2(0, -50),
-            new Vector2(panelSize.x - 60, 120), "", 14, TextAlignmentOptions.Center);
-
-        // Créer le panel pour les détails blockchain
-        GameObject blockchainPanel = CreatePanel("BlockchainPanel", panelRect,
-            new Vector2(panelSize.x - 80, 150), 
-            new Color(0.05f, 0.2f, 0.05f, 0.5f));
-
-        // Centrer le panel
-        blockchainPanel.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, 50);
-
-        GameObject blockchainInfoObj = CreateTextMeshPro("BlockchainInfoText", blockchainPanel.transform, Vector2.zero,
-            new Vector2(panelSize.x - 100, 100), "", 12, TextAlignmentOptions.Left);
-
-        // Créer l'image du produit
-        // GameObject productImageObj = CreateImage("ProductImage", panelRect, new Vector2(panelSize.x / 2 - 80, 50),
-        //     new Vector2(100, 100), productIconPlaceholder ? productIconPlaceholder : CreateDefaultSprite(Color.gray));
-
-        // Créer le bouton de fermeture
-        GameObject closeButtonObj = CreateButton("CloseButton", panelRect,
-            new Vector2(0, -panelSize.y / 2 + 40),
+        // Bouton fermer
+        GameObject closeButtonObj = CreateButton("CloseButton", buttonPanel.transform,
+            new Vector2(0, -15),
             new Vector2(150, 30),
             "Fermer");
-
-        // Créer le toggle pour le mode blockchain
-        GameObject toggleObj = CreateToggle("BlockchainToggle", panelRect,
-            new Vector2(panelSize.x / 2 - 80, panelSize.y / 2 - 30),
-            "Mode Blockchain");
 
         // Configurer l'UI Controller
         uiController.SetupReferences(
             panelObject,
             progressFillImage,
-            // frameObj.GetComponent<Image>(),
             statusObj.GetComponent<TextMeshProUGUI>(),
             productInfoObj.GetComponent<TextMeshProUGUI>(),
             blockchainPanel,
             blockchainInfoObj.GetComponent<TextMeshProUGUI>(),
-            // productImageObj.GetComponent<Image>(),
             closeButtonObj.GetComponent<Button>(),
             toggleObj.GetComponent<Toggle>()
         );
 
-        // Cacher le panel au démarrage
+        // Ajouter un bouton pour mémoriser les infos si nécessaire
+        GameObject memorizeBtn = CreateButton("MemorizeButton", buttonPanel.transform,
+            new Vector2(-180, -15),
+            new Vector2(180, 30),
+            "Mémoriser infos");
+        memorizeBtn.GetComponent<Button>().onClick.AddListener(() => uiController.MemorizeDocumentationInfo());
+
         panelObject.SetActive(false);
 
         Debug.Log("Interface Scanner QR Code générée avec succès.");
     }
 
-    // Méthodes utilitaires pour créer les éléments UI
+    // Les méthodes utilitaires (CreatePanel, CreateImage, etc.) restent les mêmes
+
     private GameObject CreatePanel(string name, Transform parent, Vector2 size, Color color)
     {
         GameObject panel = new GameObject(name);
@@ -179,7 +200,7 @@ public class QRScannerUIGenerator : MonoBehaviour
         return textObj;
     }
 
-    private GameObject CreateButton(string name, Transform parent, Vector2 position, Vector2 size, string text)
+    public GameObject CreateButton(string name, Transform parent, Vector2 position, Vector2 size, string text)
     {
         GameObject buttonObj = new GameObject(name);
         buttonObj.transform.SetParent(parent, false);

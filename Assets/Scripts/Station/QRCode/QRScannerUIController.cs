@@ -27,6 +27,7 @@ public class QRScannerUIController : MonoBehaviour
 
     // Référence au scanner station pour connaître le mode
     private QRScannerStation currentScanner;
+    private QRScannerUIGenerator scannerGenerator;
     private string currentTaskName = "";
     private Coroutine scanCoroutine;
     private bool isScanning = false;
@@ -96,6 +97,7 @@ public class QRScannerUIController : MonoBehaviour
         }
     }
 
+    // ReSharper disable Unity.PerformanceAnalysis
     public void StartScan(QRScannerStation scanner, string taskName = "")
     {
         if (!isInitialized)
@@ -114,7 +116,7 @@ public class QRScannerUIController : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
-        DisableCameraControl(true);
+        DisablePlayerControls(true);
 
         currentScanner = scanner;
         if (blockchainToggle != null)
@@ -134,12 +136,11 @@ public class QRScannerUIController : MonoBehaviour
         if (scannerPanel != null)
             scannerPanel.SetActive(false);
 
-        // Restaurer l'état précédent du curseur
         Cursor.lockState = wasMouseLocked ? CursorLockMode.Locked : CursorLockMode.None;
         Cursor.visible = wasCursorVisible;
 
         // Réactiver le contrôle de la caméra
-        DisableCameraControl(false);
+        DisablePlayerControls(false);
 
         if (currentScanner != null)
         {
@@ -149,37 +150,31 @@ public class QRScannerUIController : MonoBehaviour
 
     private void Update()
     {
-        // Si l'interface est ouverte et qu'on appuie sur Escape, fermer l'interface
         if (scannerPanel != null && scannerPanel.activeSelf && Input.GetKeyDown(KeyCode.Escape))
         {
             CloseScanner();
         }
     }
 
-    private void DisableCameraControl(bool disable)
+    public void DisablePlayerControls(bool disable)
     {
-        // Chercher le contrôleur d'interaction du joueur
-        var playerInteractionController = FindObjectOfType<PlayerInteractionController>();
-        if (playerInteractionController != null)
+        var scenarioManager = FindFirstObjectByType<ScenarioManager>();
+        if (scenarioManager != null)
         {
-            playerInteractionController.enabled = !disable;
-            Debug.Log("PlayerInteractionController " + (disable ? "désactivé" : "activé"));
+            scenarioManager.DisablePlayerControls(disable);
         }
     }
 
     private void ResetUI()
     {
-        // Réinitialiser les éléments UI
         scanProgressBar.fillAmount = 0f;
         statusText.text = "Initialisation du scan...";
         productInfoText.text = "";
         blockchainPanel.SetActive(false);
 
-        // Configurer les couleurs selon le mode
         Color modeColor = currentScanner.isBlockchainMode ? blockchainModeColor : standardModeColor;
         scanProgressBar.color = modeColor;
 
-        // Réinitialiser l'animation du cadre
         // scannerFrame.transform.localScale = Vector3.one;
     }
 
@@ -229,159 +224,217 @@ public class QRScannerUIController : MonoBehaviour
 
         isScanning = false;
     }
-    
-    // Dans la méthode DisplayBlockchainResults
-private void DisplayBlockchainResults()
-{
-    // Configurer l'interface pour les résultats blockchain
-    statusText.text = "Scan Réussi - Vérification Blockchain";
-    statusText.color = blockchainModeColor;
 
-    // Trouver les données de l'aileron
-    ScenarioManager scenarioManager = FindObjectOfType<ScenarioManager>();
-    AileronData aileronData = null;
-    
-    if (scenarioManager != null && !string.IsNullOrEmpty(currentTaskName))
+    private void DisplayBlockchainResults()
     {
-        aileronData = scenarioManager.GetAileronData(currentTaskName);
-    }
-    
-    // Afficher les infos produit
-    if (aileronData != null)
-    {
-        productInfoText.text = 
-            $"{aileronData.name}\n\n{aileronData.description}";
-            
-        // Activer le panneau blockchain
-        blockchainPanel.SetActive(true);
-        
-        // Afficher des détails blockchain adaptés à l'aileron
-        string statusText = aileronData.isForMonaco ? 
-            "Compatible avec le circuit de Monaco" : 
-            "Non compatible avec le circuit de Monaco";
-            
-        string authenticity = aileronData.isAuthentic ? 
-            "Authentic - Original Ferrari Part" : 
-            "COUNTERFEIT DETECTED - Not an official Ferrari part";
-            
-        blockchainInfoText.text = 
-            $"Certification Ferrari: {System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}\n" +
-            $"Origine: Usine Maranello, Italie\n" +
-            $"Hash de certification: 0xF3RR4R1{GenerateRandomHash()}\n" +
-            $"Date de fabrication: 2025-02-19\n" + 
-            $"Numéro de série: {aileronData.name.Replace("Aileron ", "")}-{Random.Range(100, 999)}\n" +
-            $"Statut: {statusText}\n" +
-            $"Authenticité: {authenticity}";
-    }
-    else
-    {
-        // Fallback si l'aileron n'est pas trouvé
-        productInfoText.text = 
-            "Aileron F1 Ferrari - Maranello Edition\n\nAileron en fibre de carbone de grade aérospatial, conçu dans les ateliers d'excellence de la Scuderia Ferrari. Performance aérodynamique optimale.";
-            
-        blockchainPanel.SetActive(true);
-        blockchainInfoText.text = 
-            "Certification Ferrari: " + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") +
-            "\nOrigine: Usine Maranello, Italie" +
-            "\nHash de certification: 0xF3RR4R1m4r4n3ll02024c8d73bf6721c87a..." +
-            "\nDate de fabrication: 2025-02-19" +
-            "\nNuméro de série: SF23-AER-058" +
-            "\nValidation: Département Aérodynamique Scuderia Ferrari";
-    }
-    
-    // Valider l'aileron dans le ScenarioManager
-    if (scenarioManager != null && !string.IsNullOrEmpty(currentTaskName))
-    {
-        scenarioManager.ValidateAileron(currentTaskName);
-    }
-    
-    // Jouer le son de succès
-    currentScanner.PlaySuccessSound();
-}
+        // Configurer l'interface pour les résultats blockchain
+        statusText.text = "Scan Réussi - Vérification Blockchain";
+        statusText.color = blockchainModeColor;
 
-// Méthode utilitaire pour générer un hash aléatoire
-private string GenerateRandomHash()
-{
-    string chars = "abcdef0123456789";
-    string hash = "";
-    
-    for (int i = 0; i < 24; i++)
-    {
-        hash += chars[Random.Range(0, chars.Length)];
-    }
-    
-    return hash;
-}
+        // Trouver les données de l'aileron
+        ScenarioManager scenarioManager = FindFirstObjectByType<ScenarioManager>();
+        AileronData aileronData = null;
 
-// Même approche pour DisplayStandardResults
-private void DisplayStandardResults()
-{
-    // Trouver les données de l'aileron
-    ScenarioManager scenarioManager = FindObjectOfType<ScenarioManager>();
-    AileronData aileronData = null;
-    
-    if (scenarioManager != null && !string.IsNullOrEmpty(currentTaskName))
-    {
-        aileronData = scenarioManager.GetAileronData(currentTaskName);
-    }
-
-    // Vérifier si on simule une erreur (40% de chance)
-    bool hasError = Random.value < 0.4f;
-
-    if (hasError)
-    {
-        // Afficher l'erreur
-        statusText.text = "Erreur de Vérification - Risque Augmenté";
-        statusText.color = Color.red;
-        
-        if (aileronData != null)
+        if (scenarioManager != null && !string.IsNullOrEmpty(currentTaskName))
         {
-            productInfoText.text = $"Impossible de vérifier l'authenticité de cet aileron ({aileronData.name}).\nUtilisez le mode blockchain pour une vérification complète.";
-        }
-        else
-        {
-            productInfoText.text = "Impossible de vérifier l'authenticité de ce composant.\nUtilisez le mode blockchain pour une vérification complète.";
+            aileronData = scenarioManager.GetAileronData(currentTaskName);
         }
 
-        // Jouer le son d'erreur
-        currentScanner.PlayErrorSound();
-    }
-    else
-    {
-        // Afficher les infos limitées
-        statusText.text = "Scan Terminé - Informations Limitées";
-        statusText.color = standardModeColor;
-        
+        // Afficher les infos produit de façon plus claire
         if (aileronData != null)
         {
-            productInfoText.text = $"{aileronData.name}\n\n{aileronData.description}\n\nUtilisez le mode blockchain pour accéder à l'historique complet.";
-            
-            // Valider l'aileron dans le ScenarioManager seulement si le scan est réussi
-            if (scenarioManager != null)
+            productInfoText.text = $"<b>{aileronData.name}</b>\n\n{aileronData.description}\n\n" +
+                                   $"<color=#FFD700>INFORMATIONS DE DOCUMENTATION :</color>\n" +
+                                   $"- Numéro de série : SF23-AER-058\n" +
+                                   $"- Code de validation : ESSERE\n" +
+                                   $"- Date de fabrication : 2025-02-19\n" +
+                                   $"- Niveau d'accréditation : 3";
+
+            blockchainPanel.SetActive(true);
+
+            // Informations blockchain simplifiées
+            string status = aileronData.isForMonaco ? "Compatible avec Monaco" : "Non compatible avec Monaco";
+            string authenticity = aileronData.isAuthentic ? "Authentique" : "CONTREFAÇON";
+
+            blockchainInfoText.text = $"Statut: {status} | Authenticité: {authenticity}";
+
+            // Marquer l'aileron comme scanné
+            if (scenarioManager != null && !string.IsNullOrEmpty(currentTaskName))
             {
-                scenarioManager.ValidateAileron(currentTaskName);
+                scenarioManager.ScanAileron(currentTaskName);
             }
         }
         else
         {
-            productInfoText.text = "Aileron F1 Ferrari - Maranello Edition\n\nAileron en fibre de carbone de grade aérospatial, conçu dans les ateliers d'excellence de la Scuderia Ferrari. Performance aérodynamique optimale.\nUtilisez le mode blockchain pour accéder à l'historique complet.";
+            // Fallback simplifié
+            productInfoText.text = "Aileron F1 Ferrari - Maranello Edition\n\n" +
+                                   "Aileron en fibre de carbone de grade aérospatial\n\n" +
+                                   "<color=#FFD700>INFORMATIONS DE DOCUMENTATION :</color>\n" +
+                                   "- Numéro de série : SF23-AER-058\n" +
+                                   "- Code de validation : ESSERE\n" +
+                                   "- Date de fabrication : 2025-02-19\n" +
+                                   "- Niveau d'accréditation : 3";
+
+            blockchainPanel.SetActive(true);
+            blockchainInfoText.text = "Statut: Indéterminé | Origine: Usine Maranello, Italie";
         }
+
+        // Ajouter un message pour guider l'utilisateur
+        productInfoText.text += "\n\n<color=#00FFFF>Aileron scanné. Complétez la documentation pour finaliser.</color>";
 
         // Jouer le son de succès
         currentScanner.PlaySuccessSound();
     }
-}
+
+    private void DisplayStandardResults()
+    {
+        // Trouver les données de l'aileron
+        ScenarioManager scenarioManager = FindFirstObjectByType<ScenarioManager>();
+        AileronData aileronData = null;
+
+        if (scenarioManager != null && !string.IsNullOrEmpty(currentTaskName))
+        {
+            aileronData = scenarioManager.GetAileronData(currentTaskName);
+        }
+
+        // Vérifier si on simule une erreur (40% de chance)
+        bool hasError = Random.value < 0.4f;
+
+        if (hasError)
+        {
+            // Afficher l'erreur
+            statusText.text = "Erreur de Vérification";
+            statusText.color = Color.red;
+
+            if (aileronData != null)
+            {
+                productInfoText.text = $"<b>{aileronData.name}</b>\n\n" +
+                                       "Impossible de vérifier l'authenticité.\n" +
+                                       "Utilisez le mode blockchain pour une vérification complète.";
+            }
+            else
+            {
+                productInfoText.text = "Impossible de vérifier l'authenticité de ce composant.\n" +
+                                       "Utilisez le mode blockchain pour une vérification complète.";
+            }
+
+            // Masquer le panneau blockchain
+            blockchainPanel.SetActive(false);
+
+            // Jouer le son d'erreur
+            currentScanner.PlayErrorSound();
+        }
+        else
+        {
+            // Afficher les infos limitées
+            statusText.text = "Scan Terminé - Informations Limitées";
+            statusText.color = standardModeColor;
+
+            if (aileronData != null)
+            {
+                productInfoText.text = $"<b>{aileronData.name}</b>\n\n{aileronData.description}\n\n" +
+                                       "Utilisez le mode blockchain pour plus de détails.";
+
+                // Activer le panneau blockchain avec un message d'invitation
+                blockchainPanel.SetActive(true);
+                blockchainInfoText.text = "Activez le mode blockchain pour vérifier l'authenticité";
+
+                // Marquer l'aileron comme scanné
+                if (scenarioManager != null)
+                {
+                    scenarioManager.ScanAileron(currentTaskName);
+                    productInfoText.text +=
+                        "\n\n<color=#00FFFF>Aileron scanné. Complétez la documentation pour finaliser.</color>";
+                }
+            }
+            else
+            {
+                productInfoText.text = "Aileron F1 Ferrari\n\n" +
+                                       "Informations limitées en mode standard.\n" +
+                                       "Utilisez le mode blockchain pour accéder à l'historique complet.";
+
+                blockchainPanel.SetActive(true);
+                blockchainInfoText.text = "Activez le mode blockchain pour vérifier l'authenticité";
+            }
+
+            // Jouer le son de succès
+            currentScanner.PlaySuccessSound();
+        }
+    }
+
+    public void MemorizeDocumentationInfo()
+    {
+        // Stocker les informations dans PlayerPrefs pour qu'elles soient disponibles pour la documentation
+        PlayerPrefs.SetString("DocSerialNumber", "SF23-AER-058");
+        PlayerPrefs.SetString("DocValidationCode", "ESSERE");
+        PlayerPrefs.SetString("DocManufactureDate", "2025-02-19");
+        PlayerPrefs.SetString("DocAccreditation", "3");
+        PlayerPrefs.Save();
+
+        // Montrer un feedback visuel
+        GameObject tempFeedback = new GameObject("TempFeedback");
+        tempFeedback.transform.SetParent(scannerPanel.transform, false);
+
+        RectTransform feedbackRect = tempFeedback.AddComponent<RectTransform>();
+        feedbackRect.anchoredPosition = new Vector2(0, 150);
+        feedbackRect.sizeDelta = new Vector2(300, 40);
+
+        Image feedbackBg = tempFeedback.AddComponent<Image>();
+        feedbackBg.color = new Color(0, 0.8f, 0, 0.8f);
+
+        TextMeshProUGUI feedbackText = tempFeedback.AddComponent<TextMeshProUGUI>();
+        feedbackText.text = "Informations mémorisées!";
+        feedbackText.alignment = TextAlignmentOptions.Center;
+        feedbackText.fontSize = 16;
+        feedbackText.color = Color.white;
+
+        // Détruire après 2 secondes
+        Destroy(tempFeedback, 2f);
+
+        // Jouer un son de confirmation
+        if (currentScanner != null && currentScanner.scanSuccessSound != null)
+        {
+            AudioSource tempAudio = GetComponent<AudioSource>();
+            if (tempAudio != null)
+            {
+                tempAudio.PlayOneShot(currentScanner.scanSuccessSound);
+            }
+        }
+    }
+
+    public void AddMemorizeInfoButton()
+    {
+        GameObject memorizeBtn = scannerGenerator.CreateButton("MemorizeButton", scannerPanel.transform,
+            new Vector2(0, -scannerPanel.GetComponent<RectTransform>().sizeDelta.y / 2 + 100),
+            new Vector2(250, 40),
+            "Mémoriser les infos de documentation");
+
+        Button memButton = memorizeBtn.GetComponent<Button>();
+        memButton.onClick.AddListener(MemorizeDocumentationInfo);
+    }
+
+    private string GenerateRandomHash()
+    {
+        string chars = "abcdef0123456789";
+        string hash = "";
+
+        for (int i = 0; i < 24; i++)
+        {
+            hash += chars[Random.Range(0, chars.Length)];
+        }
+
+        return hash;
+    }
 
     public void NotifyTaskCompletion(string taskName)
     {
-        ScenarioManager scenarioManager = FindObjectOfType<ScenarioManager>();
+        ScenarioManager scenarioManager = FindFirstObjectByType<ScenarioManager>();
         if (scenarioManager != null)
         {
             scenarioManager.CompleteTask(taskName);
         }
     }
 
-// Ajouter cette méthode pour l'ajustement sur tablette
     private void AdjustForTabletMode()
     {
         // Redimensionner le panneau principal

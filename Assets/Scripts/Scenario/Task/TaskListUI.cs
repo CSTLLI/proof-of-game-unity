@@ -26,7 +26,7 @@ public class TaskListUI : MonoBehaviour
     void Start()
     {
         // Trouver le ScenarioManager
-        scenarioManager = FindObjectOfType<ScenarioManager>();
+        scenarioManager = FindFirstObjectByType<ScenarioManager>();
         
         // Si le scénario n'est pas déjà initialisé, on l'initialise via le ScenarioManager
         if (scenarioManager != null && scenarioTitleText != null)

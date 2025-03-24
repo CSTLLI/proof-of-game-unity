@@ -35,13 +35,13 @@ namespace Station.Documentation
             }
             else if (uiController == null)
             {
-                uiController = FindObjectOfType<DocumentationUIController>();
+                uiController = FindFirstObjectByType<DocumentationUIController>();
             }
         }
         
         private void InitializeUI()
         {
-            DocumentationUIGenerator generator = FindObjectOfType<DocumentationUIGenerator>();
+            DocumentationUIGenerator generator = FindFirstObjectByType<DocumentationUIGenerator>();
             
             if (generator == null)
             {
@@ -53,7 +53,7 @@ namespace Station.Documentation
             }
             
             generator.GenerateUI();
-            uiController = FindObjectOfType<DocumentationUIController>();
+            uiController = FindFirstObjectByType<DocumentationUIController>();
             
             if (uiController == null)
                 Debug.LogError("Impossible de créer ou trouver le DocumentationUIController.");
@@ -71,7 +71,7 @@ namespace Station.Documentation
                 
             if (uiController == null)
             {
-                uiController = FindObjectOfType<DocumentationUIController>();
+                uiController = FindFirstObjectByType<DocumentationUIController>();
                 
                 if (uiController == null)
                 {

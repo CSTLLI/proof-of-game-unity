@@ -21,6 +21,8 @@ namespace Core
         private int aileronsValidated = 0;
         private bool scenarioInProgress = false;
         private float elapsedTime = 0f;
+        
+        private Dictionary<string, bool> scannedAilerons = new Dictionary<string, bool>();
 
         [Header("Mode")] [SerializeField] private bool blockchainModeEnabled = false;
 
@@ -75,7 +77,7 @@ namespace Core
                 if (player != null)
                 {
                     playerController =
-                        player.GetComponent<MonoBehaviour>(); // Remplacez par le type de votre contrôleur
+                        player.GetComponent<MonoBehaviour>();
                 }
             }
 
@@ -85,17 +87,14 @@ namespace Core
                 if (mainCamera != null)
                 {
                     cameraController =
-                        mainCamera.GetComponent<MonoBehaviour>(); // Remplacez par le type de votre contrôleur
+                        mainCamera.GetComponent<MonoBehaviour>();
                 }
             }
 
-            // Désactiver les contrôles au début
             DisablePlayerControls(true);
 
-            // Initialiser ou créer l'UI Manager
             InitializeUIManager();
 
-            // Attendre que tout soit initialisé avant d'afficher l'intro
             StartCoroutine(ShowIntroAfterDelay());
             
             if (gameUIManager != null)
@@ -110,7 +109,6 @@ namespace Core
             Debug.Log("ScenarioManager initialisé");
         }
 
-        // Méthode pour désactiver les contrôles joueur/caméra
         public void DisablePlayerControls(bool disable)
         {
             var movementController = playerController as MonoBehaviour;
@@ -137,17 +135,18 @@ namespace Core
         {
             scenarioInProgress = true;
             elapsedTime = 0f;
-
-            // Activer les contrôles du joueur
+            
             DisablePlayerControls(false);
 
             if (gameUIManager != null)
             {
                 gameUIManager.ResetTimer(timeLimit);
                 gameUIManager.ToggleTimer(true);
+                
+                gameUIManager.ShowTasks(true);
             }
             
-            GameUICreator uiCreator = FindObjectOfType<GameUICreator>();
+            GameUICreator uiCreator = FindFirstObjectByType<GameUICreator>();
             if (uiCreator != null)
             {
                 uiCreator.StartGame();
@@ -168,7 +167,7 @@ namespace Core
             }
             else
             {
-                feedbackController = FindObjectOfType<FeedbackUIController>();
+                feedbackController = FindFirstObjectByType<FeedbackUIController>();
                 if (feedbackController != null)
                 {
                     feedbackController.ShowTemporaryMessage("Mission commencée! Trouvez les 2 ailerons pour Monaco.", 4f);
@@ -196,7 +195,7 @@ namespace Core
             }
             else
             {
-                endModal = FindObjectOfType<GameEndModal>();
+                endModal = FindFirstObjectByType<GameEndModal>();
                 if (endModal != null)
                 {
                     endModal.ShowResults(success, aileronsValidated, requiredAilerons, elapsedTime, currentRiskLevel);
@@ -207,7 +206,7 @@ namespace Core
         private void InitializeUIManager()
         {
             // Chercher ou créer le ScenarioUIManager
-            uiManager = FindObjectOfType<ScenarioUIManager>();
+            uiManager = FindFirstObjectByType<ScenarioUIManager>();
 
             if (uiManager == null)
             {
@@ -228,10 +227,10 @@ namespace Core
         public void UpdateUIReferences()
         {
             // Mettre à jour les références aux composants UI
-            gameUIManager = FindObjectOfType<GameUIManager>();
-            introModal = FindObjectOfType<GameIntroModal>();
-            endModal = FindObjectOfType<GameEndModal>();
-            feedbackController = FindObjectOfType<FeedbackUIController>();
+            gameUIManager = FindFirstObjectByType<GameUIManager>();
+            introModal = FindFirstObjectByType<GameIntroModal>();
+            endModal = FindFirstObjectByType<GameEndModal>();
+            feedbackController = FindFirstObjectByType<FeedbackUIController>();
 
             // Configurer l'UI avec les données du scénario
             if (gameUIManager != null)
@@ -250,16 +249,13 @@ namespace Core
 
         private IEnumerator ShowIntroAfterDelay()
         {
-            // Attendre que tout soit correctement initialisé
             yield return new WaitForSeconds(0.5f);
-
-            // S'assurer qu'on a bien une référence à l'intro modal
+            
             if (introModal == null)
             {
-                introModal = FindObjectOfType<GameIntroModal>();
+                introModal = FindFirstObjectByType<GameIntroModal>();
             }
-
-            // Afficher l'intro
+            
             if (introModal != null)
             {
                 introModal.Show();
@@ -339,10 +335,42 @@ namespace Core
                 isAuthentic = true
             });
         }
+        
+        public void ScanAileron(string aileronId)
+        {
+            if (!ailerons.ContainsKey(aileronId)) return;
+    
+            // Marquer l'aileron comme scanné mais pas encore documenté
+            scannedAilerons[aileronId] = false;
+    
+            if (feedbackController != null)
+            {
+                feedbackController.ShowTemporaryMessage(
+                    $"Aileron scanné. Complétez la documentation pour valider.", 3f);
+            }
+        }
+        
+        public bool IsAileronScanned(string aileronId)
+        {
+            return scannedAilerons.ContainsKey(aileronId);
+        }
+
+        public bool IsAileronValidated(string aileronId)
+        {
+            return scannedAilerons.ContainsKey(aileronId) && scannedAilerons[aileronId];
+        }
 
         public void ValidateAileron(string aileronId)
         {
             if (!ailerons.ContainsKey(aileronId)) return;
+
+            if (scannedAilerons.ContainsKey(aileronId) && scannedAilerons[aileronId])
+            {
+                Debug.Log($"Aileron {aileronId} déjà validé, pas de double validation");
+                return;
+            }
+
+            scannedAilerons[aileronId] = true;
 
             AileronData aileron = ailerons[aileronId];
 
@@ -357,10 +385,22 @@ namespace Core
                         $"Aileron Monaco validé! ({aileronsValidated}/{requiredAilerons})", 3f);
                 }
 
+                // Vérifier si gameUIManager existe, sinon tenter de le trouver
+                if (gameUIManager == null)
+                {
+                    Debug.LogWarning("gameUIManager est null dans ValidateAileron, tentative de le retrouver...");
+                    gameUIManager = FindFirstObjectByType<GameUIManager>();
+                }
+
                 if (gameUIManager != null)
                 {
                     float progress = (float)aileronsValidated / requiredAilerons;
+                    Debug.Log($"Progression du jeu : {progress}");
                     gameUIManager.UpdateProgress(progress);
+                }
+                else
+                {
+                    Debug.LogError("Impossible de trouver ou d'utiliser gameUIManager dans ValidateAileron");
                 }
             }
             else
@@ -428,8 +468,7 @@ namespace Core
         {
             // Méthode maintenue pour compatibilité avec code existant
         }
-
-        // Getters/Setters
+        
         public float GetRiskLevel() => currentRiskLevel;
         public string GetScenarioName() => scenarioName;
         public bool IsBlockchainModeEnabled() => blockchainModeEnabled;
@@ -450,7 +489,6 @@ namespace Core
         {
             Debug.Log("GetAileronData: " + aileronId);
     
-            // Afficher le contenu du dictionnaire
             Debug.Log("Ailerons dictionary contains " + ailerons.Count + " entries");
             foreach (var entry in ailerons)
             {

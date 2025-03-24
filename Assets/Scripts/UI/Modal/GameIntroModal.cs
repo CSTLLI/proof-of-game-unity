@@ -26,12 +26,11 @@ namespace UI.Modal
 
             if (startButton != null)
             {
-                // S'assurer que l'ancien listener est supprimé pour éviter les doublons
                 startButton.onClick.RemoveAllListeners();
                 startButton.onClick.AddListener(OnStartButtonClicked);
             }
             
-            scenarioManager = FindObjectOfType<ScenarioManager>();
+            scenarioManager = FindFirstObjectByType<ScenarioManager>();
         }
 
         public void CreateModalUI()
@@ -138,7 +137,7 @@ namespace UI.Modal
                 modalPanel.SetActive(false);
             
             if (scenarioManager == null)
-                scenarioManager = FindObjectOfType<ScenarioManager>();
+                scenarioManager = FindFirstObjectByType<ScenarioManager>();
                 
             if (scenarioManager != null)
             {

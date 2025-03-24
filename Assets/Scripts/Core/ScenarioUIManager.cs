@@ -76,7 +76,7 @@ namespace Scenario
         private void CreateGameUI()
         {
             // Vérifier si GameUIManager existe déjà
-            if (FindObjectOfType<GameUIManager>() != null)
+            if (FindFirstObjectByType<GameUIManager>() != null)
                 return;
                 
             GameObject uiCreator = new GameObject("UI_Creator");
@@ -88,7 +88,7 @@ namespace Scenario
         private void CreateIntroModal()
         {
             // Éviter de créer des doublons
-            if (FindObjectOfType<GameIntroModal>() != null)
+            if (FindFirstObjectByType<GameIntroModal>() != null)
                 return;
                 
             if (introModalPrefab != null)
@@ -120,7 +120,7 @@ namespace Scenario
         private void CreateCompletionModal()
         {
             // Éviter de créer des doublons
-            if (FindObjectOfType<GameEndModal>() != null)
+            if (FindFirstObjectByType<GameEndModal>() != null)
                 return;
                 
             if (completionModalPrefab != null)
@@ -203,7 +203,7 @@ namespace Scenario
         
         public void ShowIntroModal()
         {
-            GameIntroModal introModal = FindObjectOfType<GameIntroModal>();
+            GameIntroModal introModal = FindFirstObjectByType<GameIntroModal>();
             if (introModal != null)
             {
                 introModal.Show();
@@ -216,7 +216,7 @@ namespace Scenario
         
         public void ShowCompletionModal(bool success, int aileronsFound, int requiredAilerons, float timeElapsed, float riskLevel)
         {
-            GameEndModal endModal = FindObjectOfType<GameEndModal>();
+            GameEndModal endModal = FindFirstObjectByType<GameEndModal>();
             if (endModal != null)
             {
                 endModal.ShowResults(success, aileronsFound, requiredAilerons, timeElapsed, riskLevel);
@@ -230,7 +230,7 @@ namespace Scenario
         public void ShowTemporaryMessage(string message, float duration = 3f)
         {
             if (feedbackController == null)
-                feedbackController = FindObjectOfType<FeedbackUIController>();
+                feedbackController = FindFirstObjectByType<FeedbackUIController>();
                 
             if (feedbackController != null)
                 feedbackController.ShowTemporaryMessage(message, duration);
@@ -240,10 +240,10 @@ namespace Scenario
         
         public void DebugUIStatus()
         {
-            GameIntroModal introModal = FindObjectOfType<GameIntroModal>();
-            GameEndModal endModal = FindObjectOfType<GameEndModal>();
-            GameUIManager gameUIManager = FindObjectOfType<GameUIManager>();
-            FeedbackUIController feedback = FindObjectOfType<FeedbackUIController>();
+            GameIntroModal introModal = FindFirstObjectByType<GameIntroModal>();
+            GameEndModal endModal = FindFirstObjectByType<GameEndModal>();
+            GameUIManager gameUIManager = FindFirstObjectByType<GameUIManager>();
+            FeedbackUIController feedback = FindFirstObjectByType<FeedbackUIController>();
             
             Debug.Log("Status des UI: " +
                      "IntroModal=" + (introModal != null ? "OK" : "NULL") + ", " +

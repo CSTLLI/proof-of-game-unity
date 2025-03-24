@@ -8,8 +8,7 @@ using Interaction;
 
 public class DocumentationUIController : MonoBehaviour
 {
-    [Header("UI Components")]
-    private GameObject documentationPanel;
+    [Header("UI Components")] private GameObject documentationPanel;
     private TextMeshProUGUI infoText;
     private TMP_InputField serialNumberInput;
     private TMP_InputField validationCodeInput;
@@ -20,19 +19,18 @@ public class DocumentationUIController : MonoBehaviour
     private Button closeButton;
     private Toggle blockchainToggle;
 
-    [Header("Animation Settings")]
-    [SerializeField] private float verificationDuration = 2f;
+    [Header("Animation Settings")] [SerializeField]
+    private float verificationDuration = 2f;
+
     [SerializeField] private Color standardModeColor = new Color(0.0f, 0.8f, 0.0f); // Vert terminal
     [SerializeField] private Color blockchainModeColor = new Color(0.2f, 0.8f, 0.3f); // Vert plus vif
     [SerializeField] private Color errorColor = new Color(0.8f, 0.2f, 0.2f); // Rouge pour les erreurs
 
-    // Données de documentation valides (dans un projet réel, ces données viendraient d'une base de données)
     private string validSerialNumber = "SF23-AER-058";
     private string validValidationCode = "ESSERE";
     private string validManufactureDate = "2025-02-19";
     private string validAccreditation = "3";
-    
-    // Nom de la tâche associée à cette station (à définir pour chaque station)
+
     private string associatedTaskName = "verify_docs_aileron";
 
     // Référence à la station de documentation
@@ -102,27 +100,13 @@ public class DocumentationUIController : MonoBehaviour
         }
     }
 
-    private void AutoFillFields()
-    {
-        serialNumberInput.text = validSerialNumber;
-        validationCodeInput.text = validValidationCode;
-        manufactureDateInput.text = validManufactureDate;
-        accreditationInput.text = validAccreditation;
-        
-        // Désactiver les champs en mode blockchain
-        serialNumberInput.interactable = false;
-        validationCodeInput.interactable = false;
-        manufactureDateInput.interactable = false;
-        accreditationInput.interactable = false;
-    }
-
     private void ClearFields()
     {
         serialNumberInput.text = "";
         validationCodeInput.text = "";
         manufactureDateInput.text = "";
         accreditationInput.text = "";
-        
+
         // Réactiver les champs en mode standard
         serialNumberInput.interactable = true;
         validationCodeInput.interactable = true;
@@ -134,12 +118,14 @@ public class DocumentationUIController : MonoBehaviour
     {
         if (currentStation.isBlockchainMode)
         {
-            infoText.text = "MODE BLOCKCHAIN: Les données sont automatiquement vérifiées et validées par la blockchain.\nAppuyez sur 'Vérifier' pour confirmer l'authenticité.";
+            infoText.text =
+                "MODE BLOCKCHAIN: Les données sont automatiquement vérifiées et validées par la blockchain.\nAppuyez sur 'Vérifier' pour confirmer l'authenticité.";
             infoText.color = blockchainModeColor;
         }
         else
         {
-            infoText.text = "MODE STANDARD: Veuillez saisir manuellement les informations du document à vérifier.\nTous les champs sont obligatoires.";
+            infoText.text =
+                "MODE STANDARD: Veuillez saisir manuellement les informations du document à vérifier.\nTous les champs sont obligatoires.";
             infoText.color = standardModeColor;
         }
     }
@@ -148,7 +134,8 @@ public class DocumentationUIController : MonoBehaviour
     {
         if (!isInitialized)
         {
-            Debug.LogError("DocumentationUIController n'est pas initialisé. Utilisez SetupReferences avant d'appeler StartDocumentation.");
+            Debug.LogError(
+                "DocumentationUIController n'est pas initialisé. Utilisez SetupReferences avant d'appeler StartDocumentation.");
             return;
         }
 
@@ -196,7 +183,7 @@ public class DocumentationUIController : MonoBehaviour
 
         // Réactiver le contrôle de la caméra
         DisableCameraControl(false);
-        
+
         if (currentStation != null)
         {
             currentStation.interactionText = currentStation.savedInteractionText;
@@ -216,33 +203,66 @@ public class DocumentationUIController : MonoBehaviour
     {
         isVerifying = true;
         verificationResultText.text = "Vérification en cours...";
-        
+
+        // Trouver le ScenarioManager
+        ScenarioManager scenarioManager = FindFirstObjectByType<ScenarioManager>();
+
         // En mode blockchain, le processus est automatique et toujours réussi
         if (currentStation.isBlockchainMode)
         {
             verificationResultText.color = blockchainModeColor;
-            
+
             // Simule le temps de vérification blockchain
             yield return new WaitForSeconds(verificationDuration / 2); // Plus rapide en blockchain
-            
-            verificationResultText.text = "RÉSULTAT: Documentation authentifiée par la blockchain.\n" +
-                                          "Certification: Ferrari S.p.A.\n" +
-                                          "Date de validation: " + System.DateTime.Now.ToString("yyyy-MM-dd") + "\n" +
-                                          "Hash de vérification: 0xF3RR4R1d0c73bf6721c87a...";
-            
+
+            // Vérifier si un aileron a été scanné et n'est pas encore validé
+            string scannedAileronId = null;
+            if (scenarioManager != null)
+            {
+                foreach (string aileronId in new string[]
+                             { "monaco1", "monaco2", "barcelone", "monza", "fake", "damaged" })
+                {
+                    if (scenarioManager.IsAileronScanned(aileronId) && !scenarioManager.IsAileronValidated(aileronId))
+                    {
+                        scannedAileronId = aileronId;
+                        break;
+                    }
+                }
+            }
+
+            if (scannedAileronId != null)
+            {
+                // Valider l'aileron scanné
+                verificationResultText.text = "RÉSULTAT: Documentation authentifiée par la blockchain.\n" +
+                                              "Certification: Ferrari S.p.A.\n" +
+                                              "Date de validation: " + System.DateTime.Now.ToString("yyyy-MM-dd") +
+                                              "\n" +
+                                              "Hash de vérification: 0xF3RR4R1d0c73bf6721c87a...\n\n" +
+                                              "Aileron validé avec succès!";
+
+                scenarioManager.ValidateAileron(scannedAileronId);
+            }
+            else
+            {
+                verificationResultText.text = "RÉSULTAT: Documentation authentifiée par la blockchain.\n" +
+                                              "Certification: Ferrari S.p.A.\n" +
+                                              "Date de validation: " + System.DateTime.Now.ToString("yyyy-MM-dd") +
+                                              "\n" +
+                                              "Hash de vérification: 0xF3RR4R1d0c73bf6721c87a...\n\n" +
+                                              "Aucun aileron à valider. Veuillez d'abord scanner un aileron.";
+            }
+
             currentStation.PlaySuccessSound();
-            
-            // Notifier que la tâche est complétée
-            NotifyTaskCompletion(associatedTaskName);
         }
         else
         {
+            // Reste du code inchangé pour la vérification manuelle...
             // Vérification manuelle des champs
             bool hasAllFields = !string.IsNullOrEmpty(serialNumberInput.text) &&
-                               !string.IsNullOrEmpty(validationCodeInput.text) &&
-                               !string.IsNullOrEmpty(manufactureDateInput.text) &&
-                               !string.IsNullOrEmpty(accreditationInput.text);
-            
+                                !string.IsNullOrEmpty(validationCodeInput.text) &&
+                                !string.IsNullOrEmpty(manufactureDateInput.text) &&
+                                !string.IsNullOrEmpty(accreditationInput.text);
+
             if (!hasAllFields)
             {
                 verificationResultText.color = errorColor;
@@ -251,45 +271,75 @@ public class DocumentationUIController : MonoBehaviour
                 isVerifying = false;
                 yield break;
             }
-            
+
             // Simule la durée de vérification manuelle
             yield return new WaitForSeconds(verificationDuration);
-            
+
             // Vérification des données
             bool correctSerialNumber = serialNumberInput.text == validSerialNumber;
             bool correctValidationCode = validationCodeInput.text == validValidationCode;
             bool correctManufactureDate = manufactureDateInput.text == validManufactureDate;
             bool correctAccreditation = accreditationInput.text == validAccreditation;
-            bool allCorrect = correctSerialNumber && correctValidationCode && 
-                             correctManufactureDate && correctAccreditation;
-            
+            bool allCorrect = correctSerialNumber && correctValidationCode &&
+                              correctManufactureDate && correctAccreditation;
+
             // Pour ajouter un peu d'aléatoire en mode standard (comme dans le QRScanner)
             bool randomError = Random.value < 0.3f && !allCorrect;
-            
+
             if (allCorrect)
             {
                 verificationResultText.color = standardModeColor;
-                verificationResultText.text = "VALIDATION RÉUSSIE: Les données du document sont correctes.\n" +
-                                            "La pièce est authentique et approuvée pour l'utilisation.\n" +
-                                            "Référence: Ferrari " + validSerialNumber;
+
+                // Vérifier si un aileron a été scanné mais pas encore validé
+                string scannedAileronId = null;
+                if (scenarioManager != null)
+                {
+                    foreach (string aileronId in new string[]
+                                 { "monaco1", "monaco2", "barcelone", "monza", "fake", "damaged" })
+                    {
+                        if (scenarioManager.IsAileronScanned(aileronId) &&
+                            !scenarioManager.IsAileronValidated(aileronId))
+                        {
+                            scannedAileronId = aileronId;
+                            break;
+                        }
+                    }
+                }
+
+                if (scannedAileronId != null)
+                {
+                    verificationResultText.text = "VALIDATION RÉUSSIE: Les données du document sont correctes.\n" +
+                                                  "La pièce est authentique et approuvée pour l'utilisation.\n" +
+                                                  "Référence: Ferrari " + validSerialNumber + "\n\n" +
+                                                  "Aileron validé avec succès!";
+
+                    scenarioManager.ValidateAileron(scannedAileronId);
+                }
+                else
+                {
+                    verificationResultText.text = "VALIDATION RÉUSSIE: Les données du document sont correctes.\n" +
+                                                  "La pièce est authentique et approuvée pour l'utilisation.\n" +
+                                                  "Référence: Ferrari " + validSerialNumber + "\n\n" +
+                                                  "Aucun aileron à valider. Veuillez d'abord scanner un aileron.";
+                }
+
                 currentStation.PlaySuccessSound();
-                
-                // Notifier que la tâche est complétée
-                NotifyTaskCompletion(associatedTaskName);
             }
             else if (randomError)
             {
+                // Code existant inchangé
                 verificationResultText.color = errorColor;
                 verificationResultText.text = "ERREUR DE SYSTÈME: Impossible de compléter la vérification.\n" +
-                                            "Le système de vérification standard est actuellement instable.\n" +
-                                            "Veuillez réessayer ou utiliser le mode blockchain pour une vérification fiable.";
+                                              "Le système de vérification standard est actuellement instable.\n" +
+                                              "Veuillez réessayer ou utiliser le mode blockchain pour une vérification fiable.";
                 currentStation.PlayErrorSound();
             }
             else
             {
+                // Code existant inchangé
                 verificationResultText.color = errorColor;
                 string errorMessage = "ERREUR DE VALIDATION: Les données suivantes sont incorrectes:";
-                
+
                 if (!correctSerialNumber)
                     errorMessage += "\n- Numéro de série invalide";
                 if (!correctValidationCode)
@@ -298,19 +348,98 @@ public class DocumentationUIController : MonoBehaviour
                     errorMessage += "\n- Date de fabrication incorrecte";
                 if (!correctAccreditation)
                     errorMessage += "\n- Niveau d'accréditation non autorisé";
-                
+
                 errorMessage += "\n\nVeuillez vérifier les informations et réessayer.";
                 verificationResultText.text = errorMessage;
                 currentStation.PlayErrorSound();
             }
         }
-        
+
         isVerifying = false;
     }
     
+    private void AutoFillFields()
+    {
+        // Mode blockchain traditionnel
+        if (currentStation.isBlockchainMode)
+        {
+            serialNumberInput.text = validSerialNumber;
+            validationCodeInput.text = validValidationCode;
+            manufactureDateInput.text = validManufactureDate;
+            accreditationInput.text = validAccreditation;
+        }
+        // Si des infos mémorisées sont disponibles, les utiliser
+        else if (PlayerPrefs.HasKey("DocSerialNumber"))
+        {
+            serialNumberInput.text = PlayerPrefs.GetString("DocSerialNumber", "");
+            validationCodeInput.text = PlayerPrefs.GetString("DocValidationCode", "");
+            manufactureDateInput.text = PlayerPrefs.GetString("DocManufactureDate", "");
+            accreditationInput.text = PlayerPrefs.GetString("DocAccreditation", "");
+
+            // Ajouter un bouton pour effacer ces informations
+            GameObject clearBtn = CreateButton("ClearMemButton", documentationPanel.transform,
+                new Vector2(200, -documentationPanel.GetComponent<RectTransform>().sizeDelta.y / 2 + 40),
+                new Vector2(120, 35),
+                "Effacer mémoire");
+
+            clearBtn.GetComponent<Button>().onClick.AddListener(() =>
+            {
+                ClearFields();
+                PlayerPrefs.DeleteKey("DocSerialNumber");
+                PlayerPrefs.DeleteKey("DocValidationCode");
+                PlayerPrefs.DeleteKey("DocManufactureDate");
+                PlayerPrefs.DeleteKey("DocAccreditation");
+                PlayerPrefs.Save();
+                Destroy(clearBtn);
+            });
+        }
+
+        // Désactiver les champs en mode blockchain
+        serialNumberInput.interactable = !currentStation.isBlockchainMode;
+        validationCodeInput.interactable = !currentStation.isBlockchainMode;
+        manufactureDateInput.interactable = !currentStation.isBlockchainMode;
+        accreditationInput.interactable = !currentStation.isBlockchainMode;
+    }
+
+// Méthode utilitaire pour créer un bouton
+    private GameObject CreateButton(string name, Transform parent, Vector2 position, Vector2 size, string text)
+    {
+        GameObject buttonObj = new GameObject(name);
+        buttonObj.transform.SetParent(parent, false);
+
+        RectTransform rect = buttonObj.AddComponent<RectTransform>();
+        rect.anchoredPosition = position;
+        rect.sizeDelta = size;
+
+        Image image = buttonObj.AddComponent<Image>();
+        image.color = new Color(0.2f, 0.2f, 0.2f);
+
+        Button button = buttonObj.AddComponent<Button>();
+        ColorBlock colors = button.colors;
+        colors.highlightedColor = new Color(0.3f, 0.3f, 0.3f);
+        colors.pressedColor = new Color(0.1f, 0.1f, 0.1f);
+        button.colors = colors;
+
+        GameObject textObj = new GameObject("Text");
+        textObj.transform.SetParent(buttonObj.transform, false);
+
+        RectTransform textRect = textObj.AddComponent<RectTransform>();
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.sizeDelta = Vector2.zero;
+
+        TextMeshProUGUI tmp = textObj.AddComponent<TextMeshProUGUI>();
+        tmp.text = text;
+        tmp.fontSize = 14;
+        tmp.alignment = TextAlignmentOptions.Center;
+        tmp.color = Color.white;
+
+        return buttonObj;
+    }
+
     public void NotifyTaskCompletion(string taskName)
     {
-        ScenarioManager scenarioManager = FindObjectOfType<ScenarioManager>();
+        ScenarioManager scenarioManager = FindFirstObjectByType<ScenarioManager>();
         if (scenarioManager != null)
         {
             scenarioManager.CompleteTask(taskName);
@@ -336,14 +465,14 @@ public class DocumentationUIController : MonoBehaviour
     private void DisableCameraControl(bool disable)
     {
         // Chercher le contrôleur d'interaction du joueur
-        var playerInteractionController = FindObjectOfType<PlayerInteractionController>();
+        var playerInteractionController = FindFirstObjectByType<PlayerInteractionController>();
         if (playerInteractionController != null)
         {
             playerInteractionController.enabled = !disable;
             Debug.Log("PlayerInteractionController " + (disable ? "désactivé" : "activé"));
         }
     }
-    
+
     // Méthode pour définir le nom de la tâche associée à cette station
     public void SetAssociatedTaskName(string taskName)
     {
