@@ -11,7 +11,7 @@ namespace Interaction
         private string interactionMessage = "";
         
         private Camera playerCamera;
-        private Interactable currentInteractable;
+        public Interactable currentInteractable;
         
         void Start()
         {

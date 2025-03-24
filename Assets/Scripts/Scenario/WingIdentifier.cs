@@ -4,48 +4,46 @@ using System.Collections;
 
 public class WingIdentifier : MonoBehaviour
 {
-    [SerializeField] private string aileronId; // ID correspondant à la clé dans le dictionnaire du ScenarioManager
-    [SerializeField] private string displayName; // Nom à afficher à l'utilisateur
+    [SerializeField] private string aileronId;
+    [SerializeField] private string displayName;
     
     private ScenarioManager scenarioManager;
     
-    // Pour déboguer : montre si cet aileron est pour Monaco
     [SerializeField] private bool isForMonaco;
     [SerializeField] private bool isAuthentic;
     
     void Start()
     {
-        // S'assurer que cet objet a le tag "wing"
         if (gameObject.tag != "Wing")
         {
             gameObject.tag = "Wing";
             Debug.LogWarning($"Tag 'Wing' ajouté à l'aileron {displayName}");
         }
         
-        // Lancer une coroutine pour attendre l'initialisation du ScenarioManager
         StartCoroutine(InitializeAfterDelay());
     }
     
     private IEnumerator InitializeAfterDelay()
     {
-        // Attendre quelques frames pour s'assurer que le ScenarioManager est initialisé
         yield return new WaitForSeconds(1.0f);
-        
-        // Trouver le ScenarioManager
+    
+        Debug.Log($"InitializeAfterDelay pour {gameObject.name} - ID initial: {aileronId}");
+    
         scenarioManager = FindObjectOfType<ScenarioManager>();
-        
-        // Optionnel : vérifier que l'ID existe dans le ScenarioManager
+    
         if (scenarioManager != null && !string.IsNullOrEmpty(aileronId))
         {
             AileronData data = scenarioManager.GetAileronData(aileronId);
             if (data != null)
             {
+                Debug.Log($"Données récupérées pour {aileronId}: {data.name}, isForMonaco={data.isForMonaco}, isAuthentic={data.isAuthentic}");
+            
                 isForMonaco = data.isForMonaco;
                 isAuthentic = data.isAuthentic;
-                
+            
                 if (string.IsNullOrEmpty(displayName))
                     displayName = data.name;
-                
+            
                 Debug.Log($"Aileron {aileronId} initialisé avec succès: {displayName}");
             }
             else
@@ -55,12 +53,13 @@ public class WingIdentifier : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("ScenarioManager non trouvé ou aileronId vide");
+            Debug.LogWarning($"ScenarioManager non trouvé ou aileronId vide. gameObject.name={gameObject.name}, aileronId={aileronId}");
         }
     }
     
     public string GetAileronId()
     {
+        Debug.Log($"GetAileronId appelé pour {gameObject.name}: ID = {aileronId}");
         return aileronId;
     }
     
