@@ -55,6 +55,9 @@ Le modèle vise à démontrer le retour sur investissement grâce à la réducti
 
 ## Installation et Configuration
 
+**Build fonctionnel mais seulement pour Windows**
+_ou_
+
 - Cloner le repository
 - Ouvrir le projet avec Unity 2022.2 ou version ultérieure
 - S'assurer que le package HDRP est correctement installé
