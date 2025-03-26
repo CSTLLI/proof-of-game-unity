@@ -155,5 +155,11 @@ namespace UI.Modal
             if (modalPanel != null)
                 modalPanel.SetActive(true);
         }
+        
+        public void Hide()
+        {
+            if (modalPanel != null)
+                modalPanel.SetActive(false);
+        }
     }
 }

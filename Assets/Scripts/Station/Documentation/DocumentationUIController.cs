@@ -236,7 +236,7 @@ public class DocumentationUIController : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
-        DisablePlayerControls(true);
+        // DisablePlayerControls(true);
 
         currentStation = station;
         if (blockchainToggle != null)
@@ -294,7 +294,7 @@ public class DocumentationUIController : MonoBehaviour
         Cursor.visible = wasCursorVisible;
 
         // Réactiver le contrôle de la caméra
-        DisablePlayerControls(false);
+        // DisablePlayerControls(false);
 
         if (currentStation != null)
         {

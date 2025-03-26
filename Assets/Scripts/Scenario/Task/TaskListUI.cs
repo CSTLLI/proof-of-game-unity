@@ -25,10 +25,8 @@ public class TaskListUI : MonoBehaviour
     
     void Start()
     {
-        // Trouver le ScenarioManager
         scenarioManager = FindFirstObjectByType<ScenarioManager>();
         
-        // Si le scénario n'est pas déjà initialisé, on l'initialise via le ScenarioManager
         if (scenarioManager != null && scenarioTitleText != null)
         {
             scenarioTitleText.text = scenarioManager.name;
@@ -37,12 +35,10 @@ public class TaskListUI : MonoBehaviour
     
     void Update()
     {
-        // Mise à jour du niveau de risque si disponible
         if (scenarioManager != null && riskLevelText != null)
         {
             riskLevelText.text = $"Niveau de risque: {scenarioManager.GetRiskLevel():0}%";
             
-            // Changer la couleur en fonction du niveau de risque
             float risk = scenarioManager.GetRiskLevel();
             if (risk < 30f)
                 riskLevelText.color = Color.green;
@@ -55,14 +51,12 @@ public class TaskListUI : MonoBehaviour
     
     public void Initialize(List<Task> tasks)
     {
-        // Nettoyer le conteneur de tâches
         foreach (Transform child in taskContainer)
         {
             Destroy(child.gameObject);
         }
         taskUIElements.Clear();
         
-        // Créer les éléments UI pour chaque tâche
         foreach (Task task in tasks)
         {
             GameObject taskElement = Instantiate(taskPrefab, taskContainer);
@@ -90,14 +84,12 @@ public class TaskListUI : MonoBehaviour
                 taskToggle.interactable = false; // L'utilisateur ne peut pas directement cocher/décocher
             }
             
-            // Stocker une référence à l'élément UI
             taskUIElements[task.taskName] = taskElement;
         }
     }
     
     public void UpdateTaskStatus(string taskName, bool isCompleted)
     {
-        // Mettre à jour l'état visuel d'une tâche
         if (taskUIElements.TryGetValue(taskName, out GameObject taskElement))
         {
             Toggle taskToggle = taskElement.GetComponentInChildren<Toggle>();
@@ -115,7 +107,6 @@ public class TaskListUI : MonoBehaviour
         }
     }
     
-    // Méthode pour afficher/masquer la liste des tâches
     public void ToggleTaskList()
     {
         gameObject.SetActive(!gameObject.activeSelf);

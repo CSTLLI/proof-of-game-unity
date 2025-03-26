@@ -66,7 +66,6 @@ namespace Interaction
                     targetRenderers = new Renderer[0];
             }
             
-            // Ajouter l'effet spéculaire à chaque matériau
             foreach (Renderer renderer in targetRenderers)
             {
                 if (renderer == null) continue;
@@ -76,7 +75,6 @@ namespace Interaction
                 {
                     materialsList.Add(mat);
                     
-                    // Sauvegarder les valeurs originales
                     float originalSpecular = 0f;
                     if (mat.HasProperty("_Glossiness")) 
                         originalSpecular = mat.GetFloat("_Glossiness");
@@ -92,7 +90,6 @@ namespace Interaction
                     originalSpecularValues.Add(originalSpecular);
                     originalSpecularColors.Add(originalColor);
                     
-                    // Appliquer la mise en évidence spéculaire
                     if (mat.HasProperty("_Glossiness"))
                         mat.SetFloat("_Glossiness", highlightSpecularIntensity);
                     if (mat.HasProperty("_Smoothness"))
@@ -103,10 +100,8 @@ namespace Interaction
                     if (mat.HasProperty("_SpecularColor"))
                         mat.SetColor("_SpecularColor", highlightSpecularColor);
                     
-                    // Si le shader a besoin d'une carte spéculaire
                     if (mat.HasProperty("_SpecularMap") && mat.GetTexture("_SpecularMap") == null)
                     {
-                        // Créer une texture temporaire pour la spécularité
                         Texture2D specMap = new Texture2D(2, 2);
                         Color[] colors = new Color[4] { 
                             highlightSpecularColor, 
@@ -125,7 +120,6 @@ namespace Interaction
         
         protected void RemoveSpecularHighlight()
         {
-            // Restaurer les valeurs originales
             for (int i = 0; i < materialsList.Count; i++)
             {
                 Material mat = materialsList[i];
@@ -148,7 +142,6 @@ namespace Interaction
                 }
             }
             
-            // Vider les listes
             materialsList.Clear();
             originalSpecularValues.Clear();
             originalSpecularColors.Clear();

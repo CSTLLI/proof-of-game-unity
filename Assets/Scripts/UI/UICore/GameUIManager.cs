@@ -2,6 +2,7 @@
 using UnityEngine.UI;
 using TMPro;
 using System;
+using System.Collections.Generic;
 using Core;
 using UI.Feedback;
 using Random = UnityEngine.Random;
@@ -39,6 +40,8 @@ namespace UI.UICore
         [SerializeField] private bool displayHelpMessages = true;
         private float nextHelpMessageTime = 0f;
         
+        private Dictionary<GameObject, bool> uiElementStates = new Dictionary<GameObject, bool>();
+        
         public void Initialize(TextMeshProUGUI scenarioText, TextMeshProUGUI timerText, Slider progressBar, 
             string scenarioName, float totalTime)
         {
@@ -48,21 +51,17 @@ namespace UI.UICore
             this.scenarioName = scenarioName;
             this.totalTime = totalTime;
         
-            // Configuration initiale
             SetScenarioName(scenarioName);
             remainingTime = totalTime;
             UpdateTimerDisplay();
             
-            // Trouver le texte de pourcentage
             if (progressBar != null && progressBar.transform.parent != null)
             {
                 percentText = progressBar.transform.parent.Find("PercentText")?.GetComponent<TextMeshProUGUI>();
             }
             
-            // Initialiser la progression à 0%
             UpdateProgress(0);
             
-            // Timer désactivé par défaut
             isTimerRunning = false;
             
             Debug.Log("GameUIManager initialisé avec timer désactivé");
@@ -70,15 +69,12 @@ namespace UI.UICore
         
         void Start()
         {
-            // Trouver le ScenarioManager
             scenarioManager = FindObjectOfType<ScenarioManager>();
             
-            // Configurer les événements UI
             if (blockchainModeToggle != null)
             {
                 blockchainModeToggle.onValueChanged.AddListener(OnBlockchainModeChanged);
                 
-                // Initialiser le toggle avec la valeur actuelle
                 if (scenarioManager != null)
                 {
                     blockchainModeToggle.isOn = scenarioManager.IsBlockchainModeEnabled();
@@ -89,18 +85,14 @@ namespace UI.UICore
             {
                 taskListButton.onClick.AddListener(ToggleTaskList);
             }
-            
-            // Détecter si on est sur tablette
             float aspectRatio = (float)Screen.width / Screen.height;
             isTabletMode = aspectRatio < 1.5f;
             
-            // Ajuster l'interface pour tablette
             if (isTabletMode)
             {
                 AdjustForTabletMode();
             }
             
-            // Programmer l'affichage du premier message d'aide
             if (displayHelpMessages)
             {
                 nextHelpMessageTime = Time.time + 2f;
@@ -111,12 +103,10 @@ namespace UI.UICore
         
         private void AdjustForTabletMode()
         {
-            // Ajuster l'échelle du timer pour qu'il soit plus lisible
             if (timerText != null)
             {
                 timerText.fontSize += 2;
                 
-                // Agrandir le conteneur du timer si disponible
                 Transform timerPanel = timerText.transform.parent;
                 if (timerPanel != null)
                 {
@@ -128,18 +118,15 @@ namespace UI.UICore
                 }
             }
             
-            // Ajuster la barre de progression
             if (progressBar != null)
             {
                 RectTransform barRect = progressBar.GetComponent<RectTransform>();
                 if (barRect != null)
                 {
-                    // Agrandir légèrement pour une meilleure visibilité
                     barRect.sizeDelta = new Vector2(barRect.sizeDelta.x, barRect.sizeDelta.y + 5);
                 }
             }
             
-            // Ajuster le nom du scénario
             if (scenarioNameText != null)
             {
                 scenarioNameText.fontSize += 2;
@@ -148,20 +135,17 @@ namespace UI.UICore
         
         void Update()
         {
-            // Mise à jour du timer
             if (isTimerRunning && remainingTime > 0)
             {
                 remainingTime -= Time.deltaTime;
                 UpdateTimerDisplay();
                 
-                // Vérifier si le temps est écoulé
                 if (remainingTime <= 0)
                 {
                     remainingTime = 0;
                     UpdateTimerDisplay();
                     isTimerRunning = false;
                     
-                    // Déclencher l'événement de fin de temps
                     if (OnTimeUp != null)
                     {
                         OnTimeUp.Invoke();
@@ -169,7 +153,6 @@ namespace UI.UICore
                 }
             }
             
-            // Afficher des messages d'aide périodiques
             if (displayHelpMessages && isTimerRunning && Time.time > nextHelpMessageTime)
             {
                 ShowRandomHelpMessage();
@@ -188,10 +171,8 @@ namespace UI.UICore
                 "Certaines tâches nécessitent le mode Blockchain. Activez-le pour ces tâches spécifiques."
             };
             
-            // Choisir un message aléatoire
             string message = helpMessages[Random.Range(0, helpMessages.Length)];
             
-            // Afficher via le FeedbackUIController
             FeedbackUIController feedback = FindObjectOfType<FeedbackUIController>();
             if (feedback != null)
             {
@@ -199,7 +180,6 @@ namespace UI.UICore
             }
         }
         
-        // Méthode pour afficher/masquer le panneau des tâches
         public void ShowTasks(bool show)
         {
             Transform taskPanel = transform.Find("TaskPanel");
@@ -229,7 +209,6 @@ namespace UI.UICore
         {
             if (timerText != null)
             {
-                // Convertir en minutes:secondes
                 int minutes = Mathf.FloorToInt(remainingTime / 60);
                 int seconds = Mathf.FloorToInt(remainingTime % 60);
                 timerText.text = $"{minutes:00}:{seconds:00}";
@@ -248,10 +227,8 @@ namespace UI.UICore
         {
             if (progressBar != null)
             {
-                // Mettre à jour la valeur du slider
                 progressBar.value = progress;
                 
-                // Mettre à jour directement le texte de pourcentage
                 if (percentText == null && progressBar.transform.parent != null)
                 {
                     percentText = progressBar.transform.parent.Find("PercentText")?.GetComponent<TextMeshProUGUI>();
@@ -280,14 +257,12 @@ namespace UI.UICore
             {
                 scenarioManager.SetBlockchainMode(isEnabled);
                 
-                // Afficher un message pour indiquer le changement de mode
                 string message = isEnabled ? 
                     "Mode Blockchain activé. Sécurité renforcée." : 
                     "Mode Blockchain désactivé. Utilisez ce mode pour améliorer la sécurité.";
                 
                 Debug.Log(message);
                 
-                // Afficher un message temporaire à l'écran
                 var feedbackUI = FindObjectOfType<FeedbackUIController>();
                 if (feedbackUI != null)
                 {
@@ -298,7 +273,6 @@ namespace UI.UICore
         
         void ToggleTaskList()
         {
-            // Trouver et afficher/masquer la liste des tâches
             TaskListUI taskList = FindObjectOfType<TaskListUI>();
             if (taskList != null)
             {
@@ -306,7 +280,6 @@ namespace UI.UICore
             }
         }
         
-        // Méthode pour démarrer/arrêter le timer
         public void ToggleTimer(bool enable)
         {
             isTimerRunning = enable;
@@ -321,15 +294,44 @@ namespace UI.UICore
             }
         }
         
-        public float GetRemainingTime()
+        public void HideGameUI()
         {
-            return remainingTime;
+            Transform[] allChildren = GetComponentsInChildren<Transform>(true);
+            foreach (Transform child in allChildren)
+            {
+                if (child.gameObject != gameObject)
+                {
+                    // Stocker l'état actuel avant de désactiver
+                    child.gameObject.tag = child.gameObject.activeSelf ? "UIActive" : "UIInactive";
+                    child.gameObject.SetActive(false);
+                }
+            }
         }
-        
-        // Méthode pour vérifier si on est en mode tablette
-        public bool IsTabletMode()
+
+        public void ShowGameUI()
         {
-            return isTabletMode;
+            if (uiElementStates.Count == 0)
+            {
+                Transform[] allChildren = GetComponentsInChildren<Transform>(true);
+                foreach (Transform child in allChildren)
+                {
+                    if (child.gameObject != gameObject)
+                    {
+                        child.gameObject.SetActive(true);
+                    }
+                }
+                return;
+            }
+            
+            foreach (var kvp in uiElementStates)
+            {
+                if (kvp.Key != null)
+                {
+                    kvp.Key.SetActive(kvp.Value);
+                }
+            }
+            
+            uiElementStates.Clear();
         }
     }
 }

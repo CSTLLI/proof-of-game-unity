@@ -34,6 +34,9 @@ public class QRScannerUIController : MonoBehaviour
     private bool isInitialized = false;
     private bool wasMouseLocked = false;
     private bool wasCursorVisible = false;
+    
+    private MonoBehaviour cameraController;
+    private FirstPersonMovement playerMovement;
 
     private bool isTabletMode = false;
     [SerializeField] private Vector2 tabletPanelSize = new Vector2(450, 350);
@@ -100,7 +103,6 @@ public class QRScannerUIController : MonoBehaviour
         }
     }
 
-    // ReSharper disable Unity.PerformanceAnalysis
     public void StartScan(QRScannerStation scanner, string taskName = "")
     {
         if (!isInitialized)
@@ -110,24 +112,23 @@ public class QRScannerUIController : MonoBehaviour
             return;
         }
 
-        // Sauvegarder l'état actuel du curseur
         wasMouseLocked = Cursor.lockState == CursorLockMode.Locked;
         wasCursorVisible = Cursor.visible;
         currentTaskName = taskName;
-
-        // Activer et montrer le curseur
+        
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
-
-        DisablePlayerControls(true);
 
         currentScanner = scanner;
         if (blockchainToggle != null)
             blockchainToggle.isOn = scanner.isBlockchainMode;
+        
         scannerPanel.SetActive(true);
         ResetUI();
+        
         if (scanCoroutine != null)
             StopCoroutine(scanCoroutine);
+            
         scanCoroutine = StartCoroutine(ScanAnimation());
     }
 
@@ -142,8 +143,8 @@ public class QRScannerUIController : MonoBehaviour
         Cursor.lockState = wasMouseLocked ? CursorLockMode.Locked : CursorLockMode.None;
         Cursor.visible = wasCursorVisible;
 
-        // Réactiver le contrôle de la caméra
-        DisablePlayerControls(false);
+        // Réactiver les contrôles du joueur
+        // FindAndDisablePlayerControllers(false);
 
         if (currentScanner != null)
         {
@@ -151,8 +152,51 @@ public class QRScannerUIController : MonoBehaviour
         }
     }
 
+    private void FindAndDisablePlayerControllers(bool disable)
+    {
+        // Essayer d'utiliser ScenarioManager d'abord
+        var scenarioManager = FindObjectOfType<ScenarioManager>();
+        if (scenarioManager != null)
+        {
+            scenarioManager.DisablePlayerControls(disable);
+        }
+        else
+        {
+            // Méthode de secours - gérer directement les contrôleurs
+            if (cameraController == null)
+            {
+                // Chercher tous les scripts potentiels sur la caméra
+                var camControllers = Camera.main?.GetComponents<MonoBehaviour>();
+                if (camControllers != null)
+                {
+                    foreach (var comp in camControllers)
+                    {
+                        if (comp.GetType().Name.Contains("Look") || comp.GetType().Name.Contains("Camera"))
+                        {
+                            cameraController = comp;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (playerMovement == null)
+            {
+                playerMovement = FindObjectOfType<FirstPersonMovement>();
+            }
+
+            // Désactiver les contrôleurs
+            if (cameraController != null)
+                cameraController.enabled = !disable;
+                
+            if (playerMovement != null)
+                playerMovement.enabled = !disable;
+        }
+    }
+
     private void Update()
     {
+        // Fermer avec Escape
         if (scannerPanel != null && scannerPanel.activeSelf && Input.GetKeyDown(KeyCode.Escape))
         {
             CloseScanner();

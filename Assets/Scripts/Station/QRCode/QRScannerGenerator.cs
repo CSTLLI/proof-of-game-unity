@@ -122,11 +122,10 @@ public class QRScannerUIGenerator : MonoBehaviour
 
         // Bouton fermer
         GameObject closeButtonObj = CreateButton("CloseButton", buttonPanel.transform,
-            new Vector2(0, -15),
+            new Vector2(0, -10),
             new Vector2(150, 30),
             "Fermer");
 
-        // Configurer l'UI Controller
         uiController.SetupReferences(
             panelObject,
             progressFillImage,
@@ -139,10 +138,9 @@ public class QRScannerUIGenerator : MonoBehaviour
             this
         );
 
-        // Ajouter un bouton pour mémoriser les infos si nécessaire
         GameObject memorizeBtn = CreateButton("MemorizeButton", buttonPanel.transform,
-            new Vector2(-180, -15),
-            new Vector2(180, 30),
+            new Vector2(-180, -10),
+            new Vector2(150, 30),
             "Mémoriser infos");
         memorizeBtn.GetComponent<Button>().onClick.AddListener(() => uiController.MemorizeDocumentationInfo());
 
@@ -150,8 +148,6 @@ public class QRScannerUIGenerator : MonoBehaviour
 
         Debug.Log("Interface Scanner QR Code générée avec succès.");
     }
-
-    // Les méthodes utilitaires (CreatePanel, CreateImage, etc.) restent les mêmes
 
     private GameObject CreatePanel(string name, Transform parent, Vector2 size, Color color)
     {

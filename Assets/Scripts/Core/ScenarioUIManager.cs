@@ -16,17 +16,16 @@ namespace Scenario
         
         [Header("Modales")]
         [SerializeField] private GameObject introModalPrefab;
-        [SerializeField] private GameObject completionModalPrefab;
+        [SerializeField] private GameObject endModalPrefab;
         
         // Variables d'instance
         private GameObject introModalObj;
-        private GameObject completionModalObj;
+        private GameObject endModalObj;
         private FeedbackUIController feedbackController;
         
         // Référence au ScenarioManager
         private ScenarioManager scenarioManager;
         
-        // Singleton pattern
         public static ScenarioUIManager Instance { get; private set; }
         
         void Awake()
@@ -45,7 +44,6 @@ namespace Scenario
         
         void Start()
         {
-            // Le ScenarioManager devrait appeler CreateAllUI
             if (createUIOnStart && scenarioManager == null)
             {
                 CreateAllUI();
@@ -59,15 +57,13 @@ namespace Scenario
             Debug.Log("ScenarioManager enregistré auprès du ScenarioUIManager");
         }
         
-        // Méthode unifiée pour créer toutes les UI
         public void CreateAllUI()
         {
             Debug.Log("Création de toutes les UI...");
             
-            // Créer les systèmes UI dans l'ordre
             CreateFeedbackSystem();
             CreateIntroModal();
-            CreateCompletionModal();
+            CreateEndModal();
             CreateGameUI();
             
             Debug.Log("Création des UI terminée");
@@ -99,7 +95,6 @@ namespace Scenario
                 return;
             }
             
-            // Création programmatique
             introModalObj = new GameObject("IntroModal");
             DontDestroyOnLoad(introModalObj);
             
@@ -117,37 +112,38 @@ namespace Scenario
             Debug.Log("IntroModal créée");
         }
         
-        private void CreateCompletionModal()
+        private void CreateEndModal()
         {
             // Éviter de créer des doublons
-            if (FindFirstObjectByType<GameEndModal>() != null)
-                return;
-                
-            if (completionModalPrefab != null)
+            GameEndModal existingModal = FindFirstObjectByType<GameEndModal>();
+            if (existingModal != null)
             {
-                completionModalObj = Instantiate(completionModalPrefab);
-                completionModalObj.name = "CompletionModal";
-                completionModalObj.SetActive(false);
-                DontDestroyOnLoad(completionModalObj);
+                endModalObj = existingModal.gameObject;
                 return;
             }
-            
-            // Création programmatique
-            completionModalObj = new GameObject("CompletionModal");
-            DontDestroyOnLoad(completionModalObj);
-            
-            Canvas canvas = completionModalObj.AddComponent<Canvas>();
+        
+            if (endModalPrefab != null)
+            {
+                endModalObj = Instantiate(endModalPrefab);
+                endModalObj.name = "EndModal";
+                DontDestroyOnLoad(endModalObj);
+                return;
+            }
+    
+            endModalObj = new GameObject("EndModal");
+            DontDestroyOnLoad(endModalObj);
+    
+            Canvas canvas = endModalObj.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 100;
-            
-            completionModalObj.AddComponent<CanvasScaler>().uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            completionModalObj.AddComponent<GraphicRaycaster>();
-            
-            // Ajouter le GameEndModal
-            completionModalObj.AddComponent<GameEndModal>();
-            completionModalObj.SetActive(false);
-            
-            Debug.Log("CompletionModal créée");
+    
+            endModalObj.AddComponent<CanvasScaler>().uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            endModalObj.AddComponent<GraphicRaycaster>();
+    
+            GameEndModal endModal = endModalObj.AddComponent<GameEndModal>();
+            endModal.CreateModalUI();
+    
+            Debug.Log("EndModal créée");
         }
         
         private void CreateFeedbackSystem()
@@ -199,43 +195,6 @@ namespace Scenario
             tempMsgPanel.SetActive(false);
             
             Debug.Log("FeedbackSystem créé");
-        }
-        
-        public void ShowIntroModal()
-        {
-            GameIntroModal introModal = FindFirstObjectByType<GameIntroModal>();
-            if (introModal != null)
-            {
-                introModal.Show();
-            }
-            else
-            {
-                Debug.LogError("IntroModal introuvable");
-            }
-        }
-        
-        public void ShowCompletionModal(bool success, int aileronsFound, int requiredAilerons, float timeElapsed, float riskLevel)
-        {
-            GameEndModal endModal = FindFirstObjectByType<GameEndModal>();
-            if (endModal != null)
-            {
-                endModal.ShowResults(success, aileronsFound, requiredAilerons, timeElapsed, riskLevel);
-            }
-            else
-            {
-                Debug.LogError("EndModal introuvable");
-            }
-        }
-        
-        public void ShowTemporaryMessage(string message, float duration = 3f)
-        {
-            if (feedbackController == null)
-                feedbackController = FindFirstObjectByType<FeedbackUIController>();
-                
-            if (feedbackController != null)
-                feedbackController.ShowTemporaryMessage(message, duration);
-            else
-                Debug.LogError("FeedbackController introuvable");
         }
         
         public void DebugUIStatus()
