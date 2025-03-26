@@ -301,8 +301,6 @@ namespace UI.UICore
             {
                 if (child.gameObject != gameObject)
                 {
-                    // Stocker l'état actuel avant de désactiver
-                    child.gameObject.tag = child.gameObject.activeSelf ? "UIActive" : "UIInactive";
                     child.gameObject.SetActive(false);
                 }
             }
