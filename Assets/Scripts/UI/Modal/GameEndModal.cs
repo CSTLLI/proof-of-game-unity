@@ -2,6 +2,7 @@
 using UnityEngine.UI;
 using TMPro;
 using Core;
+using UI.Menu;
 
 namespace UI.Modal
 {
@@ -263,10 +264,22 @@ namespace UI.Modal
 
         void OnRestartButtonClicked()
         {
+            // Cacher le modal
             if (modalPanel != null)
                 modalPanel.SetActive(false);
-            UnityEngine.SceneManagement.SceneManager.LoadScene(
-                UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
+    
+            gameObject.SetActive(false);
+    
+            ScenarioManager scenarioManager = FindFirstObjectByType<ScenarioManager>();
+            if (scenarioManager != null)
+            {
+                scenarioManager.ResetAndStartScenario();
+            }
+            else
+            {
+                UnityEngine.SceneManagement.SceneManager.LoadScene(
+                    UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
+            }
         }
         
         void OnQuitButtonClicked()

@@ -23,6 +23,9 @@ namespace Core
         private bool scenarioInProgress = false;
         private float elapsedTime = 0f;
         private bool hasInitialized = false;
+        
+        private Vector3 playerStartPosition;
+        private Quaternion playerStartRotation;
 
         private Dictionary<string, bool> scannedAilerons = new Dictionary<string, bool>();
 
@@ -44,7 +47,7 @@ namespace Core
         private GameIntroModal introModal;
         private GameEndModal endModal;
         private FeedbackUIController feedbackController;
-        
+
         private ScenarioUIManager uiManager;
 
         private GameObject taskModal;
@@ -59,9 +62,9 @@ namespace Core
                 eventSystem.AddComponent<UnityEngine.EventSystems.EventSystem>();
                 eventSystem.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
             }
-            
+
             InitializeAilerons();
-            
+
             DisablePlayerControls(true);
         }
 
@@ -69,11 +72,11 @@ namespace Core
         {
             DisablePlayerControls(true);
         }
-        
+
         public void Initialize()
         {
             if (hasInitialized) return;
-            
+
             currentRiskLevel = blockchainModeEnabled ? baseRiskLevel / 2 : baseRiskLevel;
 
             taskModal = GameObject.Find("TaskModal");
@@ -89,6 +92,9 @@ namespace Core
                 {
                     playerController =
                         player.GetComponent<MonoBehaviour>();
+                    playerStartPosition = player.transform.position;
+                    playerStartRotation = player.transform.rotation;
+                    Debug.Log($"Position initiale du joueur sauvegardée: {playerStartPosition}");
                 }
             }
 
@@ -112,7 +118,7 @@ namespace Core
                 gameUIManager.OnTimeUp += HandleTimeUp;
                 gameUIManager.ToggleTimer(false);
             }
-            
+
             hasInitialized = true;
             Debug.Log("ScenarioManager initialisé");
         }
@@ -147,7 +153,7 @@ namespace Core
             {
                 Initialize();
             }
-            
+
             if (introModal == null)
             {
                 introModal = FindObjectOfType<GameIntroModal>();
@@ -164,7 +170,7 @@ namespace Core
                 StartActualScenario();
             }
         }
-        
+
         public void StartActualScenario()
         {
             scenarioInProgress = true;
@@ -223,7 +229,7 @@ namespace Core
                 gameUIManager.ToggleTimer(false);
                 gameUIManager.HideGameUI();
             }
-    
+
             DocumentationUIController docController = FindObjectOfType<DocumentationUIController>();
             if (docController != null)
             {
@@ -235,23 +241,24 @@ namespace Core
             {
                 Debug.Log("EndModal trouvé, activation...");
                 endModalObj.SetActive(true);
-        
+
                 Transform endModalPanelTransform = endModalObj.transform.Find("EndModalPanel");
                 if (endModalPanelTransform != null)
                 {
                     endModalPanelTransform.gameObject.SetActive(true);
                     Debug.Log("EndModalPanel activé");
                 }
-        
+
                 GameEndModal endModalComponent = endModalObj.GetComponent<GameEndModal>();
                 if (endModalComponent != null)
                 {
-                    endModalComponent.ShowResults(success, aileronsValidated, requiredAilerons, elapsedTime, currentRiskLevel);
+                    endModalComponent.ShowResults(success, aileronsValidated, requiredAilerons, elapsedTime,
+                        currentRiskLevel);
                 }
-        
+
                 return;
             }
-    
+
             Debug.LogError("EndModal introuvable dans la scène!");
         }
 
@@ -473,7 +480,7 @@ namespace Core
             CompleteScenario(false);
         }
 
-private void ConfigureStations()
+        private void ConfigureStations()
         {
             var qrStations = FindObjectsOfType<Station.QRCode.QRScannerStation>();
             foreach (var station in qrStations)
@@ -531,6 +538,39 @@ private void ConfigureStations()
             }
 
             return ailerons[aileronId];
+        }
+
+        public void ResetAndStartScenario()
+        {
+            aileronsValidated = 0;
+            elapsedTime = 0f;
+            scenarioInProgress = false;
+            scannedAilerons.Clear();
+            currentRiskLevel = blockchainModeEnabled ? baseRiskLevel / 2 : baseRiskLevel;
+
+            var player = GameObject.FindGameObjectWithTag("Player");
+            if (player != null)
+            {
+                var characterController = player.GetComponent<CharacterController>();
+                if (characterController != null)
+                    characterController.enabled = false;
+            
+                player.transform.position = playerStartPosition;
+                player.transform.rotation = playerStartRotation;
+        
+                if (characterController != null)
+                    characterController.enabled = true;
+            
+                Debug.Log($"Joueur repositionné à: {playerStartPosition}");
+            }
+    
+            if (gameUIManager != null)
+            {
+                gameUIManager.ResetTimer(timeLimit);
+                gameUIManager.UpdateProgress(0);
+            }
+    
+            StartScenario();
         }
     }
 
