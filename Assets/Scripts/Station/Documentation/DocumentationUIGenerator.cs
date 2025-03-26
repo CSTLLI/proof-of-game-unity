@@ -4,13 +4,13 @@ using TMPro;
 
 public class DocumentationUIGenerator : MonoBehaviour
 {
-    [Header("Configuration")] 
+    [Header("Configuration")]
     [SerializeField] private string canvasName = "DocumentationCanvas";
     [SerializeField] private Vector2 panelSize = new Vector2(800, 600);
-    [SerializeField] private Color panelColor = new Color(0.1f, 0.1f, 0.1f, 0.9f);
+    [SerializeField] private Color panelColor = new Color(0.1f, 0.1f, 0.1f, 1f); // Opacité à 100%
     [SerializeField] private bool generateOnStart = false;
 
-    [Header("Apparence")] 
+    [Header("Apparence")]
     [SerializeField] private Color terminalBackgroundColor = new Color(0.05f, 0.05f, 0.05f, 1f);
     [SerializeField] private Color terminalTextColor = new Color(0.0f, 0.8f, 0.0f, 1f); // Vert terminal
 
@@ -52,93 +52,105 @@ public class DocumentationUIGenerator : MonoBehaviour
         // Créer l'UI Controller et l'attacher au GameObject actuel
         uiController = gameObject.AddComponent<DocumentationUIController>();
 
-        // Créer les éléments UI
-        GameObject titleObj = CreateTextMeshPro("TitleText", panelRect, new Vector2(0, panelSize.y / 2 - 30),
-            new Vector2(panelSize.x - 120, 50), "Terminal de Documentation", 24, TextAlignmentOptions.Center);
+        // --- En-tête avec titre et toggle ---
+        GameObject headerPanel = CreatePanel("HeaderPanel", panelRect, 
+            new Vector2(panelSize.x, 60), 
+            new Color(0.05f, 0.05f, 0.05f, 1f));
+        headerPanel.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, panelSize.y/2 - 30);
 
-        // Créer un panel pour l'écran du terminal avec plus d'espace
-        GameObject terminalPanel = CreatePanel("TerminalScreen", panelRect, new Vector2(panelSize.x - 60, panelSize.y - 120), terminalBackgroundColor);
-        RectTransform terminalRect = terminalPanel.GetComponent<RectTransform>();
-        terminalRect.anchoredPosition = new Vector2(0, 20);
+        GameObject titleObj = CreateTextMeshPro("TitleText", headerPanel.transform, 
+            new Vector2(0, 0),
+            new Vector2(300, 40), "Terminal de Documentation", 24, TextAlignmentOptions.Center);
+        titleObj.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, 0);
 
-        // Séparateur visuel supérieur
-        GameObject separatorTop = CreatePanel("SeparatorTop", terminalRect, 
-            new Vector2(terminalRect.sizeDelta.x - 40, 2), new Color(0.3f, 0.3f, 0.3f, 1f));
-        separatorTop.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, terminalRect.sizeDelta.y/2 - 80);
+        // Toggle blockchain dans l'en-tête à droite
+        GameObject toggleObj = CreateToggle("BlockchainToggle", headerPanel.transform,
+            new Vector2(panelSize.x/2 - 100, 0),
+            "Mode Blockchain");
 
-        // Créer la zone de texte d'informations avec plus d'espace
-        GameObject infoTextObj = CreateTextMeshPro("InfoText", terminalRect, new Vector2(0, terminalRect.sizeDelta.y/2 - 40),
-            new Vector2(terminalRect.sizeDelta.x - 40, 60),
+        // --- Zone d'informations et instructions ---
+        GameObject infoPanel = CreatePanel("InfoPanel", panelRect, 
+            new Vector2(panelSize.x - 40, 60), 
+            new Color(0.08f, 0.08f, 0.08f, 1f));
+        infoPanel.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, panelSize.y/2 - 90);
+
+        GameObject infoTextObj = CreateTextMeshPro("InfoText", infoPanel.transform, 
+            new Vector2(0, 0),
+            new Vector2(panelSize.x - 60, 50),
             "Station de vérification de documentation. En attente de saisie de données...", 
-            16, TextAlignmentOptions.Left, terminalTextColor);
+            16, TextAlignmentOptions.Center, terminalTextColor);
+
+        // --- Zone principale des champs de saisie ---
+        GameObject inputPanel = CreatePanel("InputPanel", panelRect, 
+            new Vector2(panelSize.x - 40, 280), 
+            terminalBackgroundColor);
+        inputPanel.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, 30);
+
+        // Créer les champs de saisie de manière plus responsive
+        float fieldSpacing = 55;
+        Vector2 labelSize = new Vector2(200, 30);
+        Vector2 inputSize = new Vector2(300, 30);
+        float startY = 100;
+
+        // Champ 1: Numéro de série
+        GameObject serialNumberLabel = CreateTextMeshPro("SerialNumberLabel", inputPanel.transform, 
+            new Vector2(-panelSize.x/4 + 30, startY),
+            labelSize, "Numéro de série:", 16, TextAlignmentOptions.Left, terminalTextColor);
         
-        // Créer la section des champs de saisie avec plus d'espacement vertical
-        GameObject inputFieldsContainer = CreatePanel("InputFieldsContainer", terminalRect, 
-            new Vector2(terminalRect.sizeDelta.x - 40, 220), new Color(0, 0, 0, 0));
-        RectTransform inputFieldsRect = inputFieldsContainer.GetComponent<RectTransform>();
-        inputFieldsRect.anchoredPosition = new Vector2(0, -20);
+        GameObject serialNumberField = CreateInputField("SerialNumberInput", inputPanel.transform,
+            new Vector2(panelSize.x/4 - 20, startY), inputSize, "Entrez le numéro de série...");
 
-        // Champ de saisie du numéro de série avec espacement amélioré
-        GameObject serialNumberLabel = CreateTextMeshPro("SerialNumberLabel", inputFieldsRect, 
-            new Vector2(-inputFieldsRect.sizeDelta.x/2 + 120, 90),
-            new Vector2(200, 30), "Numéro de série:", 16, TextAlignmentOptions.Left, terminalTextColor);
+        // Champ 2: Code de validation
+        GameObject validationCodeLabel = CreateTextMeshPro("ValidationCodeLabel", inputPanel.transform,
+            new Vector2(-panelSize.x/4 + 30, startY - fieldSpacing),
+            labelSize, "Code de validation:", 16, TextAlignmentOptions.Left, terminalTextColor);
         
-        GameObject serialNumberField = CreateInputField("SerialNumberInput", inputFieldsRect,
-            new Vector2(70, 90), new Vector2(300, 30), "Entrez le numéro de série...");
+        GameObject validationCodeField = CreateInputField("ValidationCodeInput", inputPanel.transform,
+            new Vector2(panelSize.x/4 - 20, startY - fieldSpacing), inputSize, "Entrez le code de validation...");
 
-        // Champ de saisie du code de validation
-        GameObject validationCodeLabel = CreateTextMeshPro("ValidationCodeLabel", inputFieldsRect,
-            new Vector2(-inputFieldsRect.sizeDelta.x/2 + 120, 40),
-            new Vector2(200, 30), "Code de validation:", 16, TextAlignmentOptions.Left, terminalTextColor);
+        // Champ 3: Date de fabrication
+        GameObject manufactureDateLabel = CreateTextMeshPro("ManufactureDateLabel", inputPanel.transform,
+            new Vector2(-panelSize.x/4 + 30, startY - fieldSpacing*2),
+            labelSize, "Date de fabrication:", 16, TextAlignmentOptions.Left, terminalTextColor);
         
-        GameObject validationCodeField = CreateInputField("ValidationCodeInput", inputFieldsRect,
-            new Vector2(70, 40), new Vector2(300, 30), "Entrez le code de validation...");
+        GameObject manufactureDateField = CreateInputField("ManufactureDateInput", inputPanel.transform,
+            new Vector2(panelSize.x/4 - 20, startY - fieldSpacing*2), inputSize, "Format: AAAA-MM-JJ");
 
-        // Champ de saisie de la date de fabrication
-        GameObject manufactureDateLabel = CreateTextMeshPro("ManufactureDateLabel", inputFieldsRect,
-            new Vector2(-inputFieldsRect.sizeDelta.x/2 + 120, -10),
-            new Vector2(200, 30), "Date de fabrication:", 16, TextAlignmentOptions.Left, terminalTextColor);
+        // Champ 4: Niveau d'accréditation
+        GameObject accreditationLabel = CreateTextMeshPro("AccreditationLabel", inputPanel.transform,
+            new Vector2(-panelSize.x/4 + 30, startY - fieldSpacing*3),
+            labelSize, "Niveau d'accréditation:", 16, TextAlignmentOptions.Left, terminalTextColor);
         
-        GameObject manufactureDateField = CreateInputField("ManufactureDateInput", inputFieldsRect,
-            new Vector2(70, -10), new Vector2(300, 30), "Format: AAAA-MM-JJ");
+        GameObject accreditationField = CreateInputField("AccreditationInput", inputPanel.transform,
+            new Vector2(panelSize.x/4 - 20, startY - fieldSpacing*3), inputSize, "Entrez le niveau (1-5)");
 
-        // Champ de saisie du niveau d'accréditation
-        GameObject accreditationLabel = CreateTextMeshPro("AccreditationLabel", inputFieldsRect,
-            new Vector2(-inputFieldsRect.sizeDelta.x/2 + 120, -60),
-            new Vector2(200, 30), "Niveau d'accréditation:", 16, TextAlignmentOptions.Left, terminalTextColor);
-        
-        GameObject accreditationField = CreateInputField("AccreditationInput", inputFieldsRect,
-            new Vector2(70, -60), new Vector2(300, 30), "Entrez le niveau (1-5)");
+        // --- Zone de résultats de vérification ---
+        GameObject resultPanel = CreatePanel("ResultPanel", panelRect, 
+            new Vector2(panelSize.x - 40, 120), 
+            new Color(0.05f, 0.1f, 0.05f, 1f));
+        resultPanel.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, -130);
 
-        // Séparateur visuel inférieur
-        GameObject separatorBottom = CreatePanel("SeparatorBottom", terminalRect, 
-            new Vector2(terminalRect.sizeDelta.x - 40, 2), new Color(0.3f, 0.3f, 0.3f, 1f));
-        separatorBottom.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, -terminalRect.sizeDelta.y/2 + 80);
-
-        // Créer la zone de résultats de vérification avec plus d'espace
-        GameObject verificationResultObj = CreateTextMeshPro("VerificationResult", terminalRect,
-            new Vector2(0, -terminalRect.sizeDelta.y/2 + 40),
-            new Vector2(terminalRect.sizeDelta.x - 40, 60),
+        GameObject verificationResultObj = CreateTextMeshPro("VerificationResult", resultPanel.transform,
+            new Vector2(0, 0),
+            new Vector2(panelSize.x - 60, 100),
             "En attente de vérification...", 16, TextAlignmentOptions.Left, terminalTextColor);
 
-        // Créer les boutons avec un meilleur espacement
-        GameObject verifyButton = CreateButton("VerifyButton", panelRect,
-            new Vector2(-80, -panelSize.y / 2 + 40),
-            new Vector2(150, 35),
+        // --- Zone de boutons de contrôle ---
+        GameObject buttonPanel = CreatePanel("ButtonPanel", panelRect, 
+            new Vector2(panelSize.x, 70), 
+            new Color(0.1f, 0.1f, 0.1f, 1f));
+        buttonPanel.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, -panelSize.y/2 + 35);
+
+        // Boutons avec espacement bien défini
+        GameObject verifyButton = CreateButton("VerifyButton", buttonPanel.transform,
+            new Vector2(-100, 0),
+            new Vector2(180, 40),
             "Vérifier");
 
-        GameObject closeButton = CreateButton("CloseButton", panelRect,
-            new Vector2(80, -panelSize.y / 2 + 40),
-            new Vector2(150, 35),
+        GameObject closeButton = CreateButton("CloseButton", buttonPanel.transform,
+            new Vector2(100, 0),
+            new Vector2(180, 40),
             "Fermer");
-
-        // Créer le toggle pour le mode blockchain dans un espace dédié en haut à droite
-        GameObject toggleContainer = CreatePanel("BlockchainToggleContainer", panelRect,
-            new Vector2(120, 40), new Color(0.2f, 0.2f, 0.2f, 0.8f));
-        toggleContainer.GetComponent<RectTransform>().anchoredPosition = new Vector2(panelSize.x / 2 - 70, panelSize.y / 2 - 30);
-        
-        GameObject toggleObj = CreateToggle("BlockchainToggle", toggleContainer.transform,
-            new Vector2(0, 0), "Mode Blockchain");
 
         // Configurer l'UI Controller
         uiController.SetupReferences(
@@ -222,7 +234,7 @@ public class DocumentationUIGenerator : MonoBehaviour
 
         TextMeshProUGUI tmp = textObj.AddComponent<TextMeshProUGUI>();
         tmp.text = text;
-        tmp.fontSize = 14;
+        tmp.fontSize = 16;
         tmp.alignment = TextAlignmentOptions.Center;
         tmp.color = Color.white;
 
@@ -239,7 +251,7 @@ public class DocumentationUIGenerator : MonoBehaviour
         rect.sizeDelta = size;
 
         Image image = inputObj.AddComponent<Image>();
-        image.color = new Color(0.1f, 0.1f, 0.1f);
+        image.color = new Color(0.15f, 0.15f, 0.15f);
 
         // Text Area
         GameObject textArea = new GameObject("TextArea");
@@ -289,68 +301,68 @@ public class DocumentationUIGenerator : MonoBehaviour
 
         // Set colors
         ColorBlock colors = inputField.colors;
-        colors.normalColor = new Color(0.1f, 0.1f, 0.1f);
-        colors.highlightedColor = new Color(0.2f, 0.2f, 0.2f);
-        colors.selectedColor = new Color(0.2f, 0.2f, 0.2f);
+        colors.normalColor = new Color(0.15f, 0.15f, 0.15f);
+        colors.highlightedColor = new Color(0.25f, 0.25f, 0.25f);
+        colors.selectedColor = new Color(0.25f, 0.25f, 0.25f);
         inputField.colors = colors;
 
         return inputObj;
-    }
+        }
 
-    private GameObject CreateToggle(string name, Transform parent, Vector2 position, string label)
-    {
-        GameObject toggleObj = new GameObject(name);
-        toggleObj.transform.SetParent(parent, false);
+   private GameObject CreateToggle(string name, Transform parent, Vector2 position, string label)
+   {
+       GameObject toggleObj = new GameObject(name);
+       toggleObj.transform.SetParent(parent, false);
 
-        RectTransform rect = toggleObj.AddComponent<RectTransform>();
-        rect.anchoredPosition = position;
-        rect.sizeDelta = new Vector2(120, 20);
+       RectTransform rect = toggleObj.AddComponent<RectTransform>();
+       rect.anchoredPosition = position;
+       rect.sizeDelta = new Vector2(160, 30);
 
-        Toggle toggle = toggleObj.AddComponent<Toggle>();
+       Toggle toggle = toggleObj.AddComponent<Toggle>();
 
-        // Background
-        GameObject background = new GameObject("Background");
-        background.transform.SetParent(toggleObj.transform, false);
+       // Background
+       GameObject background = new GameObject("Background");
+       background.transform.SetParent(toggleObj.transform, false);
 
-        RectTransform bgRect = background.AddComponent<RectTransform>();
-        bgRect.anchoredPosition = new Vector2(-50, 0);
-        bgRect.sizeDelta = new Vector2(20, 20);
+       RectTransform bgRect = background.AddComponent<RectTransform>();
+       bgRect.anchoredPosition = new Vector2(-70, 0);
+       bgRect.sizeDelta = new Vector2(24, 24);
 
-        Image bgImage = background.AddComponent<Image>();
-        bgImage.color = new Color(0.2f, 0.2f, 0.2f);
+       Image bgImage = background.AddComponent<Image>();
+       bgImage.color = new Color(0.2f, 0.2f, 0.2f);
 
-        // Checkmark
-        GameObject checkmark = new GameObject("Checkmark");
-        checkmark.transform.SetParent(background.transform, false);
+       // Checkmark
+       GameObject checkmark = new GameObject("Checkmark");
+       checkmark.transform.SetParent(background.transform, false);
 
-        RectTransform checkRect = checkmark.AddComponent<RectTransform>();
-        checkRect.anchorMin = Vector2.zero;
-        checkRect.anchorMax = Vector2.one;
-        checkRect.sizeDelta = new Vector2(-4, -4);
-        checkRect.anchoredPosition = Vector2.zero;
+       RectTransform checkRect = checkmark.AddComponent<RectTransform>();
+       checkRect.anchorMin = Vector2.zero;
+       checkRect.anchorMax = Vector2.one;
+       checkRect.sizeDelta = new Vector2(-4, -4);
+       checkRect.anchoredPosition = Vector2.zero;
 
-        Image checkImage = checkmark.AddComponent<Image>();
-        checkImage.color = new Color(0.2f, 0.8f, 0.2f);
+       Image checkImage = checkmark.AddComponent<Image>();
+       checkImage.color = new Color(0.2f, 0.8f, 0.2f);
 
-        // Label
-        GameObject labelObj = new GameObject("Label");
-        labelObj.transform.SetParent(toggleObj.transform, false);
+       // Label
+       GameObject labelObj = new GameObject("Label");
+       labelObj.transform.SetParent(toggleObj.transform, false);
 
-        RectTransform labelRect = labelObj.AddComponent<RectTransform>();
-        labelRect.anchoredPosition = new Vector2(20, 0);
-        labelRect.sizeDelta = new Vector2(100, 20);
+       RectTransform labelRect = labelObj.AddComponent<RectTransform>();
+       labelRect.anchoredPosition = new Vector2(10, 0);
+       labelRect.sizeDelta = new Vector2(140, 30);
 
-        TextMeshProUGUI tmp = labelObj.AddComponent<TextMeshProUGUI>();
-        tmp.text = label;
-        tmp.fontSize = 12;
-        tmp.alignment = TextAlignmentOptions.Left;
-        tmp.color = Color.white;
+       TextMeshProUGUI tmp = labelObj.AddComponent<TextMeshProUGUI>();
+       tmp.text = label;
+       tmp.fontSize = 14;
+       tmp.alignment = TextAlignmentOptions.Left;
+       tmp.color = Color.white;
 
-        // Configure toggle
-        toggle.targetGraphic = bgImage;
-        toggle.graphic = checkImage;
-        toggle.isOn = false;
+       // Configure toggle
+       toggle.targetGraphic = bgImage;
+       toggle.graphic = checkImage;
+       toggle.isOn = false;
 
-        return toggleObj;
-    }
+       return toggleObj;
+   }
 }

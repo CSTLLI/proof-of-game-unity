@@ -138,20 +138,20 @@ namespace UI.UICore
             taskText.margin = new Vector4(45, 0, 0, 0);
 
             // Toggle Blockchain
-            GameObject blockchainToggleObj = new GameObject("BlockchainToggle");
-            blockchainToggleObj.transform.SetParent(taskPanel.transform, false);
+            // GameObject blockchainToggleObj = new GameObject("BlockchainToggle");
+            // blockchainToggleObj.transform.SetParent(taskPanel.transform, false);
 
-            RectTransform toggleRect = blockchainToggleObj.AddComponent<RectTransform>();
-            toggleRect.anchorMin = new Vector2(0, 0.3f);
-            toggleRect.anchorMax = new Vector2(0.5f, 0.5f);
-            toggleRect.pivot = new Vector2(0, 0.5f);
-            toggleRect.anchoredPosition = new Vector2(45, -10);
-            toggleRect.sizeDelta = new Vector2(0, 30);
-
-            Toggle blockchainToggle = blockchainToggleObj.AddComponent<Toggle>();
-
+            // RectTransform toggleRect = blockchainToggleObj.AddComponent<RectTransform>();
+            // toggleRect.anchorMin = new Vector2(0, 0.3f);
+            // toggleRect.anchorMax = new Vector2(0.5f, 0.5f);
+            // toggleRect.pivot = new Vector2(0, 0.5f);
+            // toggleRect.anchoredPosition = new Vector2(45, -10);
+            // toggleRect.sizeDelta = new Vector2(0, 30);
+            //
+            // Toggle blockchainToggle = blockchainToggleObj.AddComponent<Toggle>();
+            //
             GameObject toggleBg = new GameObject("Background");
-            toggleBg.transform.SetParent(blockchainToggleObj.transform, false);
+            // toggleBg.transform.SetParent(blockchainToggleObj.transform, false);
 
             RectTransform bgRect = toggleBg.AddComponent<RectTransform>();
             bgRect.anchorMin = new Vector2(0, 0.5f);
@@ -175,7 +175,7 @@ namespace UI.UICore
             checkImage.color = new Color(0.2f, 0.8f, 0.2f, 1f);
 
             GameObject toggleLabel = new GameObject("Label");
-            toggleLabel.transform.SetParent(blockchainToggleObj.transform, false);
+            // toggleLabel.transform.SetParent(blockchainToggleObj.transform, false);
 
             RectTransform labelRect = toggleLabel.AddComponent<RectTransform>();
             labelRect.anchorMin = new Vector2(0, 0);
@@ -183,14 +183,14 @@ namespace UI.UICore
             labelRect.pivot = new Vector2(0, 0.5f);
             labelRect.anchoredPosition = new Vector2(30, 0);
 
-            TextMeshProUGUI labelText = toggleLabel.AddComponent<TextMeshProUGUI>();
-            labelText.text = "Mode Blockchain";
-            labelText.fontSize = 14;
-            labelText.color = Color.white;
-            labelText.alignment = TextAlignmentOptions.Left;
+            // TextMeshProUGUI labelText = toggleLabel.AddComponent<TextMeshProUGUI>();
+            // labelText.text = "Mode Blockchain";
+            // labelText.fontSize = 14;
+            // labelText.color = Color.white;
+            // labelText.alignment = TextAlignmentOptions.Left;
 
-            blockchainToggle.graphic = checkImage;
-            blockchainToggle.targetGraphic = bgImage;
+            // blockchainToggle.graphic = checkImage;
+            // blockchainToggle.targetGraphic = bgImage;
 
             // Panneau de progression déplacé vers le bas
             GameObject progressObj = new GameObject("ProgressPanel");

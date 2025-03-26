@@ -111,10 +111,14 @@ namespace Core
 
         public void DisablePlayerControls(bool disable)
         {
-            var movementController = playerController as MonoBehaviour;
-            if (movementController != null && movementController.name.Contains("Movement"))
+            var movementController = FindObjectOfType<FirstPersonMovement>();
+            if (movementController != null)
                 movementController.enabled = !disable;
+    
+            if (playerController != null && playerController.gameObject != movementController?.gameObject)
+                playerController.enabled = !disable;
 
+            // Désactiver le contrôleur de caméra
             if (cameraController != null)
                 cameraController.enabled = !disable;
 
@@ -289,7 +293,7 @@ namespace Core
         {
             ailerons.Add("monaco1", new AileronData
             {
-                name = "Aileron SF-MON-01",
+                name = "SF-MON-01",
                 description = "Aileron avant Ferrari Spécial Monaco",
                 isForMonaco = true,
                 isAuthentic = true
@@ -297,7 +301,7 @@ namespace Core
 
             ailerons.Add("monaco2", new AileronData
             {
-                name = "Aileron SF-MON-02",
+                name = "SF-MON-02",
                 description = "Aileron avant Ferrari Spécial Monaco - Version légère",
                 isForMonaco = true,
                 isAuthentic = true
@@ -305,7 +309,7 @@ namespace Core
 
             ailerons.Add("barcelone", new AileronData
             {
-                name = "Aileron SF-BCN-21",
+                name = "SF-BCN-21",
                 description = "Aileron avant Ferrari pour Circuit de Barcelone",
                 isForMonaco = false,
                 isAuthentic = true
@@ -313,7 +317,7 @@ namespace Core
 
             ailerons.Add("monza", new AileronData
             {
-                name = "Aileron SF-MNZ-14",
+                name = "SF-MNZ-14",
                 description = "Aileron avant Ferrari pour Circuit de Monza",
                 isForMonaco = false,
                 isAuthentic = true
@@ -321,7 +325,7 @@ namespace Core
 
             ailerons.Add("fake", new AileronData
             {
-                name = "Aileron SF-??-??",
+                name = "SF-??-??",
                 description = "Aileron suspect - origine inconnue",
                 isForMonaco = false,
                 isAuthentic = false
@@ -329,7 +333,7 @@ namespace Core
 
             ailerons.Add("damaged", new AileronData
             {
-                name = "Aileron SF-OLD-07",
+                name = "SF-OLD-07",
                 description = "Aileron ancien avec dommages structurels",
                 isForMonaco = false,
                 isAuthentic = true

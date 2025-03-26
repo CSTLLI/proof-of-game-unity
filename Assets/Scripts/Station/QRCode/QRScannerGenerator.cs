@@ -135,7 +135,8 @@ public class QRScannerUIGenerator : MonoBehaviour
             blockchainPanel,
             blockchainInfoObj.GetComponent<TextMeshProUGUI>(),
             closeButtonObj.GetComponent<Button>(),
-            toggleObj.GetComponent<Toggle>()
+            toggleObj.GetComponent<Toggle>(),
+            this
         );
 
         // Ajouter un bouton pour mémoriser les infos si nécessaire

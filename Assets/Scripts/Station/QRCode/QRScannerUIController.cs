@@ -49,7 +49,9 @@ public class QRScannerUIController : MonoBehaviour
         TextMeshProUGUI blockchainInfo,
         // Image product,
         Button close,
-        Toggle toggle)
+        Toggle toggle,
+        QRScannerUIGenerator generator
+    )
     {
         scannerPanel = panel;
         scanProgressBar = progressBar;
@@ -61,6 +63,7 @@ public class QRScannerUIController : MonoBehaviour
         // productImage = product;
         closeButton = close;
         blockchainToggle = toggle;
+        scannerGenerator = generator;
 
         // Configurer les événements
         if (closeButton != null)
@@ -364,74 +367,42 @@ public class QRScannerUIController : MonoBehaviour
 
     public void MemorizeDocumentationInfo()
     {
-        // Stocker les informations dans PlayerPrefs pour qu'elles soient disponibles pour la documentation
+        // Version ultra-simplifiée qui se concentre uniquement sur l'enregistrement des données
         PlayerPrefs.SetString("DocSerialNumber", "SF23-AER-058");
         PlayerPrefs.SetString("DocValidationCode", "ESSERE");
         PlayerPrefs.SetString("DocManufactureDate", "2025-02-19");
         PlayerPrefs.SetString("DocAccreditation", "3");
         PlayerPrefs.Save();
-
-        // Montrer un feedback visuel
-        GameObject tempFeedback = new GameObject("TempFeedback");
-        tempFeedback.transform.SetParent(scannerPanel.transform, false);
-
-        RectTransform feedbackRect = tempFeedback.AddComponent<RectTransform>();
-        feedbackRect.anchoredPosition = new Vector2(0, 150);
-        feedbackRect.sizeDelta = new Vector2(300, 40);
-
-        Image feedbackBg = tempFeedback.AddComponent<Image>();
-        feedbackBg.color = new Color(0, 0.8f, 0, 0.8f);
-
-        TextMeshProUGUI feedbackText = tempFeedback.AddComponent<TextMeshProUGUI>();
-        feedbackText.text = "Informations mémorisées!";
-        feedbackText.alignment = TextAlignmentOptions.Center;
-        feedbackText.fontSize = 16;
-        feedbackText.color = Color.white;
-
-        // Détruire après 2 secondes
-        Destroy(tempFeedback, 2f);
-
-        // Jouer un son de confirmation
-        if (currentScanner != null && currentScanner.scanSuccessSound != null)
+    
+        Debug.Log("Informations mémorisées avec succès dans PlayerPrefs");
+    
+        // Notification minimaliste
+        if (statusText != null)
         {
-            AudioSource tempAudio = GetComponent<AudioSource>();
-            if (tempAudio != null)
+            statusText.text = "Informations mémorisées!";
+            statusText.color = Color.green;
+        
+            // Remettre le texte d'origine après un délai
+            StartCoroutine(ResetStatusText(2.5f));
+        }
+    }
+
+    private IEnumerator ResetStatusText(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+    
+        if (statusText != null)
+        {
+            if (currentScanner != null && currentScanner.isBlockchainMode)
             {
-                tempAudio.PlayOneShot(currentScanner.scanSuccessSound);
+                statusText.text = "Scan Réussi - Vérification Blockchain";
+                statusText.color = blockchainModeColor;
             }
-        }
-    }
-
-    public void AddMemorizeInfoButton()
-    {
-        GameObject memorizeBtn = scannerGenerator.CreateButton("MemorizeButton", scannerPanel.transform,
-            new Vector2(0, -scannerPanel.GetComponent<RectTransform>().sizeDelta.y / 2 + 100),
-            new Vector2(250, 40),
-            "Mémoriser les infos de documentation");
-
-        Button memButton = memorizeBtn.GetComponent<Button>();
-        memButton.onClick.AddListener(MemorizeDocumentationInfo);
-    }
-
-    private string GenerateRandomHash()
-    {
-        string chars = "abcdef0123456789";
-        string hash = "";
-
-        for (int i = 0; i < 24; i++)
-        {
-            hash += chars[Random.Range(0, chars.Length)];
-        }
-
-        return hash;
-    }
-
-    public void NotifyTaskCompletion(string taskName)
-    {
-        ScenarioManager scenarioManager = FindFirstObjectByType<ScenarioManager>();
-        if (scenarioManager != null)
-        {
-            scenarioManager.CompleteTask(taskName);
+            else
+            {
+                statusText.text = "Scan Terminé - Informations Limitées";
+                statusText.color = standardModeColor;
+            }
         }
     }
 
@@ -477,7 +448,6 @@ public class QRScannerUIController : MonoBehaviour
             }
         }
 
-        // Ajuster la position des boutons
         if (closeButton != null)
         {
             RectTransform buttonRect = closeButton.GetComponent<RectTransform>();

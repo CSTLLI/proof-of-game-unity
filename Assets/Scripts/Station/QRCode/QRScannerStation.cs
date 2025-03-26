@@ -131,9 +131,7 @@ namespace Station.QRCode
                         }
                     }
                 }
-
-                // Si aucune des méthodes ci-dessus ne fonctionne, utiliser la méthode de secours
-                // qui cherche dans tous les gameobjects de la scène
+                
                 GameObject[] wingObjects = GameObject.FindGameObjectsWithTag("Wing");
                 foreach (GameObject obj in wingObjects)
                 {
