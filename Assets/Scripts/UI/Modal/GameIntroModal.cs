@@ -26,11 +26,12 @@ namespace UI.Modal
 
             if (startButton != null)
             {
+                // S'assurer que l'ancien listener est supprimé pour éviter les doublons
                 startButton.onClick.RemoveAllListeners();
                 startButton.onClick.AddListener(OnStartButtonClicked);
             }
             
-            scenarioManager = FindFirstObjectByType<ScenarioManager>();
+            scenarioManager = FindObjectOfType<ScenarioManager>();
         }
 
         public void CreateModalUI()
@@ -106,7 +107,7 @@ namespace UI.Modal
             buttonRect.sizeDelta = new Vector2(200, 50);
             buttonRect.anchoredPosition = new Vector2(0, 40);
             Image buttonImage = buttonObj.AddComponent<Image>();
-            buttonImage.color = new Color(0.2f, 0.6f, 0.2f);
+            buttonImage.color = new Color(0.831f, 0.035f, 0.035f); // Rouge Ferrari
             startButton = buttonObj.AddComponent<Button>();
             startButton.targetGraphic = buttonImage;
             startButton.interactable = true;
@@ -137,12 +138,12 @@ namespace UI.Modal
                 modalPanel.SetActive(false);
             
             if (scenarioManager == null)
-                scenarioManager = FindFirstObjectByType<ScenarioManager>();
+                scenarioManager = FindObjectOfType<ScenarioManager>();
                 
             if (scenarioManager != null)
             {
                 Debug.Log("Démarrage du scénario...");
-                scenarioManager.StartScenario();
+                scenarioManager.StartActualScenario();
             }
             else
             {
@@ -154,12 +155,6 @@ namespace UI.Modal
         {
             if (modalPanel != null)
                 modalPanel.SetActive(true);
-        }
-        
-        public void Hide()
-        {
-            if (modalPanel != null)
-                modalPanel.SetActive(false);
         }
     }
 }

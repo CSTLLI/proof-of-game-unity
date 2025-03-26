@@ -22,6 +22,7 @@ namespace Core
         private int aileronsValidated = 0;
         private bool scenarioInProgress = false;
         private float elapsedTime = 0f;
+        private bool hasInitialized = false;
 
         private Dictionary<string, bool> scannedAilerons = new Dictionary<string, bool>();
 
@@ -58,17 +59,27 @@ namespace Core
                 eventSystem.AddComponent<UnityEngine.EventSystems.EventSystem>();
                 eventSystem.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
             }
+            
+            InitializeAilerons();
+            
+            DisablePlayerControls(true);
         }
 
         void Start()
         {
-            InitializeAilerons();
+            DisablePlayerControls(true);
+        }
+        
+        public void Initialize()
+        {
+            if (hasInitialized) return;
+            
             currentRiskLevel = blockchainModeEnabled ? baseRiskLevel / 2 : baseRiskLevel;
 
             taskModal = GameObject.Find("TaskModal");
             if (taskModal != null)
             {
-                taskModal.SetActive(false); // Cacher la modale des tâches au début
+                taskModal.SetActive(false);
             }
 
             if (playerController == null)
@@ -91,11 +102,7 @@ namespace Core
                 }
             }
 
-            DisablePlayerControls(true);
-
             InitializeUIManager();
-
-            StartCoroutine(ShowIntroAfterDelay());
 
             if (gameUIManager != null)
             {
@@ -105,7 +112,8 @@ namespace Core
                 gameUIManager.OnTimeUp += HandleTimeUp;
                 gameUIManager.ToggleTimer(false);
             }
-
+            
+            hasInitialized = true;
             Debug.Log("ScenarioManager initialisé");
         }
 
@@ -118,11 +126,9 @@ namespace Core
             if (playerController != null && playerController.gameObject != movementController?.gameObject)
                 playerController.enabled = !disable;
 
-            // Désactiver le contrôleur de caméra
             if (cameraController != null)
                 cameraController.enabled = !disable;
 
-            // Gérer le curseur
             if (disable)
             {
                 Cursor.lockState = CursorLockMode.None;
@@ -136,6 +142,30 @@ namespace Core
         }
 
         public void StartScenario()
+        {
+            if (!hasInitialized)
+            {
+                Initialize();
+            }
+            
+            if (introModal == null)
+            {
+                introModal = FindObjectOfType<GameIntroModal>();
+            }
+
+            if (introModal != null)
+            {
+                introModal.Show();
+                Debug.Log("Intro modal affiché");
+            }
+            else
+            {
+                Debug.LogError("Impossible de trouver ou créer l'intro modal");
+                StartActualScenario();
+            }
+        }
+        
+        public void StartActualScenario()
         {
             scenarioInProgress = true;
             elapsedTime = 0f;
@@ -151,7 +181,7 @@ namespace Core
                 gameUIManager.ShowTasks(true);
             }
 
-            GameUICreator uiCreator = FindFirstObjectByType<GameUICreator>();
+            GameUICreator uiCreator = FindObjectOfType<GameUICreator>();
             if (uiCreator != null)
             {
                 uiCreator.StartGame();
@@ -172,7 +202,7 @@ namespace Core
             }
             else
             {
-                feedbackController = FindFirstObjectByType<FeedbackUIController>();
+                feedbackController = FindObjectOfType<FeedbackUIController>();
                 if (feedbackController != null)
                 {
                     feedbackController.ShowTemporaryMessage("Mission commencée! Trouvez les 2 ailerons pour Monaco.",
@@ -193,12 +223,6 @@ namespace Core
                 gameUIManager.ToggleTimer(false);
                 gameUIManager.HideGameUI();
             }
-
-            // taskModal = GameObject.Find("TaskModal");
-            // if (taskModal != null)
-            // {
-            //     taskModal.SetActive(false);
-            // }
     
             DocumentationUIController docController = FindObjectOfType<DocumentationUIController>();
             if (docController != null)
@@ -233,7 +257,7 @@ namespace Core
 
         private void InitializeUIManager()
         {
-            uiManager = FindFirstObjectByType<ScenarioUIManager>();
+            uiManager = FindObjectOfType<ScenarioUIManager>();
 
             if (uiManager == null)
             {
@@ -250,10 +274,10 @@ namespace Core
 
         public void UpdateUIReferences()
         {
-            gameUIManager = FindFirstObjectByType<GameUIManager>();
-            introModal = FindFirstObjectByType<GameIntroModal>();
-            endModal = FindFirstObjectByType<GameEndModal>();
-            feedbackController = FindFirstObjectByType<FeedbackUIController>();
+            gameUIManager = FindObjectOfType<GameUIManager>();
+            introModal = FindObjectOfType<GameIntroModal>();
+            endModal = FindObjectOfType<GameEndModal>();
+            feedbackController = FindObjectOfType<FeedbackUIController>();
 
             if (gameUIManager != null)
             {
@@ -267,26 +291,6 @@ namespace Core
                       "GameUIManager=" + (gameUIManager != null ? "OK" : "NULL") + ", " +
                       "IntroModal=" + (introModal != null ? "OK" : "NULL") + ", " +
                       "EndModal=" + (endModal != null ? "OK" : "NULL"));
-        }
-
-        private IEnumerator ShowIntroAfterDelay()
-        {
-            yield return new WaitForSeconds(0.5f);
-
-            if (introModal == null)
-            {
-                introModal = FindFirstObjectByType<GameIntroModal>();
-            }
-
-            if (introModal != null)
-            {
-                introModal.Show();
-                Debug.Log("Intro modal affiché");
-            }
-            else
-            {
-                Debug.LogError("Impossible de trouver ou créer l'intro modal");
-            }
         }
 
         void Update()
@@ -409,7 +413,7 @@ namespace Core
                 if (gameUIManager == null)
                 {
                     Debug.LogWarning("gameUIManager est null dans ValidateAileron, tentative de le retrouver...");
-                    gameUIManager = FindFirstObjectByType<GameUIManager>();
+                    gameUIManager = FindObjectOfType<GameUIManager>();
                 }
 
                 if (gameUIManager != null)
@@ -469,7 +473,7 @@ namespace Core
             CompleteScenario(false);
         }
 
-        private void ConfigureStations()
+private void ConfigureStations()
         {
             var qrStations = FindObjectsOfType<Station.QRCode.QRScannerStation>();
             foreach (var station in qrStations)
