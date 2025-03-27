@@ -306,6 +306,11 @@ namespace Core
             {
                 elapsedTime += Time.deltaTime;
 
+                if (Mathf.FloorToInt(elapsedTime) != Mathf.FloorToInt(elapsedTime - Time.deltaTime))
+                {
+                    Debug.Log($"Temps écoulé: {elapsedTime}/{timeLimit} secondes");
+                }
+                
                 if (aileronsValidated >= requiredAilerons)
                 {
                     CompleteScenario(true);
