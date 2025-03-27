@@ -17,7 +17,7 @@ public class LoginUIManager : MonoBehaviour
     public Button toRegisterButton;
     public TextMeshProUGUI loginErrorText;
 
-    [Header("Register Panel")] public TMP_InputField registerNameInput;
+    [Header("Register Panel")]
     public TMP_InputField registerUsernameInput;
     public TMP_InputField registerPasswordInput;
     public TMP_InputField registerConfirmPasswordInput;
@@ -54,6 +54,9 @@ public class LoginUIManager : MonoBehaviour
         {
             CreateUIElements();
         }
+        
+        LoginManager loginManager = gameObject.AddComponent<LoginManager>();
+        loginManager.uiManager = this;
 
         Debug.Log("Start: LoginUI");
         InitializeUI();
@@ -87,7 +90,7 @@ public class LoginUIManager : MonoBehaviour
             new Vector2(0.5f, 0.9f), new Vector2(0.5f, 0.9f),
             new Vector2(0, 0), new Vector2(300, 50));
 
-        // Email
+        // Pseudo
         TextMeshProUGUI usernameLabel = CreateText(panel, "UsernameLabel", "Pseudo :", 16,
             new Vector2(0.3f, 0.7f), new Vector2(0.3f, 0.7f),
             new Vector2(0, 0), new Vector2(150, 30));
@@ -138,17 +141,8 @@ public class LoginUIManager : MonoBehaviour
             new Vector2(0.5f, 0.9f), new Vector2(0.5f, 0.9f),
             new Vector2(0, 0), new Vector2(300, 50));
 
-        // Nom
-        TextMeshProUGUI nameLabel = CreateText(panel, "NameLabel", "Nom :", 16,
-            new Vector2(0.3f, 0.8f), new Vector2(0.3f, 0.8f),
-            new Vector2(0, 0), new Vector2(150, 30));
-
-        registerNameInput = CreateInputField(panel, "NameInput", "Entrez votre nom",
-            new Vector2(0.7f, 0.8f), new Vector2(0.7f, 0.8f),
-            new Vector2(0, 0), new Vector2(200, 40));
-
-        // Email
-        TextMeshProUGUI emailLabel = CreateText(panel, "UsernameLabel", "Username :", 16,
+        // Pseudo
+        TextMeshProUGUI usernameLabel = CreateText(panel, "UsernameLabel", "Pseudo :", 16,
             new Vector2(0.3f, 0.7f), new Vector2(0.3f, 0.7f),
             new Vector2(0, 0), new Vector2(150, 30));
 
@@ -394,6 +388,8 @@ public class LoginUIManager : MonoBehaviour
         // Login panel
         if (toRegisterButton != null) toRegisterButton.onClick.AddListener(ShowRegisterPanel);
         if (loginErrorText != null) loginErrorText.gameObject.SetActive(false);
+        
+        loginButton.onClick.AddListener(() => loginManager.HandleLogin());
 
         // Register panel
         if (toLoginButton != null) toLoginButton.onClick.AddListener(ShowLoginPanel);
@@ -466,7 +462,6 @@ public class LoginUIManager : MonoBehaviour
     public void ShowRegisterPanel()
     {
         ShowPanel(registerPanel);
-        if (registerNameInput != null) registerNameInput.text = "";
         if (registerUsernameInput != null) registerUsernameInput.text = "";
         if (registerPasswordInput != null) registerPasswordInput.text = "";
         if (registerConfirmPasswordInput != null) registerConfirmPasswordInput.text = "";

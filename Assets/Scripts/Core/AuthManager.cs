@@ -32,7 +32,6 @@ public class LoginManager : MonoBehaviour
     void OnEnable()
     {
         Debug.Log("LoginManager: OnEnable - Vérifions les connexions des boutons");
-        // Si l'UI n'est pas initialisé dans Start, essayons ici
         InitializeUI();
     }
     
@@ -52,17 +51,14 @@ public class LoginManager : MonoBehaviour
         
         Debug.Log("LoginManager: Connexion des événements des boutons...");
         
-        // Connecter explicitement les événements de bouton
         if (uiManager.loginButton != null)
         {
-            // Vérifions si le bouton est interactif
             if (!uiManager.loginButton.interactable)
             {
                 Debug.LogWarning("LoginManager: Le bouton de connexion n'est pas interactif!");
                 uiManager.loginButton.interactable = true;
             }
             
-            // Utilisons un événement directement attaché plutôt que RemoveAllListeners
             uiManager.loginButton.onClick.RemoveAllListeners();
             uiManager.loginButton.onClick.AddListener(() => {
                 Debug.Log("LoginManager: Bouton de connexion cliqué!");
@@ -91,7 +87,6 @@ public class LoginManager : MonoBehaviour
             Debug.LogWarning("LoginManager: Bouton d'inscription non trouvé!");
         }
         
-        // Ajouter une validation directe pour tester les boutons
         Debug.Log("LoginManager: Test de validation des boutons...");
         Debug.Log($"LoginButton != null: {uiManager.loginButton != null}");
         if (uiManager.loginButton != null)
@@ -101,7 +96,6 @@ public class LoginManager : MonoBehaviour
         }
     }
     
-    // Méthode publique pour tester le bouton directement
     public void TestLoginButton()
     {
         Debug.Log("LoginManager: Test manuel du bouton de connexion");
@@ -150,7 +144,7 @@ public class LoginManager : MonoBehaviour
             return;
         }
         
-        string username = uiManager.registerNameInput.text;
+        string username = uiManager.registerUsernameInput.text;
         string password = uiManager.registerPasswordInput.text;
         string confirmPassword = uiManager.registerConfirmPasswordInput.text;
         
@@ -303,7 +297,6 @@ public class LoginManager : MonoBehaviour
                 {
                     string responseText = request.downloadHandler.text;
                     
-                    // Même logique d'adaptation que pour login
                     if (!responseText.Contains("\"success\":"))
                     {
                         responseText = "{\"success\":true,\"user\":" + responseText + "}";
@@ -314,29 +307,8 @@ public class LoginManager : MonoBehaviour
                     if (response.success)
                     {
                         Debug.Log($"LoginManager: Inscription réussie pour {response.user.username}");
-                            
-                        // Store user data
-                        PlayerPrefs.SetInt("UserID", response.user.id);
-                        PlayerPrefs.SetString("Username", response.user.username);
-                        if (!string.IsNullOrEmpty(response.token))
-                        {
-                            PlayerPrefs.SetString("Token", response.token);
-                        }
-                        PlayerPrefs.Save();
                         
-                        // Update UI and play success sound
-                        uiManager.currentUserName = response.user.username;
-                        uiManager.IsLoggedIn = true;
-                        uiManager.PlaySuccessSound();
-                        
-                        // Show main menu
-                        uiManager.ShowMainMenuPanel();
-                        
-                        // Call success callback if it exists
-                        if (uiManager.onSuccessfulLogin != null)
-                        {
-                            uiManager.onSuccessfulLogin.Invoke();
-                        }
+                        uiManager.ShowLoginPanel();
                     }
                     else
                     {
@@ -354,7 +326,6 @@ public class LoginManager : MonoBehaviour
         }
     }
     
-    // Méthode pour être appelée directement dans l'inspecteur ou depuis le code
     public void ConnectUIElements()
     {
         Debug.Log("LoginManager: Connexion manuelle des éléments UI");
