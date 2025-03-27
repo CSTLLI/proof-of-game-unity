@@ -2,7 +2,6 @@
 using UnityEngine.UI;
 using TMPro;
 using Core;
-using UI.Menu;
 
 public class MainMenu : MonoBehaviour
 {
@@ -29,7 +28,6 @@ public class MainMenu : MonoBehaviour
         // Créer l'UI du menu
         CreateMenuUI();
         
-        // Initialiser le gestionnaire de login si authentification requise
         if (requireLogin)
         {
             InitializeLoginManager();

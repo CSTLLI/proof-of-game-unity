@@ -2,7 +2,6 @@
 using UnityEngine.UI;
 using TMPro;
 using Core;
-using UI.Menu;
 
 namespace UI.Modal
 {

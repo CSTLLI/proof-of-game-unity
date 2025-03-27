@@ -148,7 +148,7 @@ public class SimpleMenuUICreator : MonoBehaviour
         titleText.fontStyle = FontStyles.Bold;
         
         // Add username input
-        GameObject usernameInput = CreateInputField(loginCard.transform, "Email / Nom d'utilisateur", 
+        GameObject usernameInput = CreateInputField(loginCard.transform, "Nom d'utilisateur", 
             new Vector2(0.5f, 0.7f), new Vector2(320, 60));
         
         // Add password input
