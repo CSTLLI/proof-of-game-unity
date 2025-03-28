@@ -20,7 +20,7 @@ namespace Core
         private int requiredAilerons = 2;
 
         private int aileronsValidated = 0;
-        private bool scenarioInProgress = false;
+        public bool scenarioInProgress = false;
         private float elapsedTime = 0f;
         private bool hasInitialized = false;
         
